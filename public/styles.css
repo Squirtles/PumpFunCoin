@@ -120,6 +120,41 @@ form input {
     margin-right: auto;
 }
 
+/* Tabs */
+#auth-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+#auth-tabs button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #ddd;
+    color: #333;
+    font-size: 16px;
+    cursor: pointer;
+    outline: none;
+}
+
+#auth-tabs button:hover {
+    background-color: #ccc;
+}
+
+#auth-tabs .active-tab {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
+
+/* Hidden Section */
+.hidden {
+    display: none;
+}
+
+.active {
+    display: block;
+}
 
 
 /* Pop-Up Styling */
