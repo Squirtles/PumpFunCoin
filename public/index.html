@@ -17,14 +17,30 @@
         <div class="content-wrapper">
             <h1>Pumpfun Coin Game</h1>
 
-            <!-- Sign-Up / Login -->
+            <!-- Tabs for switching between Sign-Up and Login -->
+            <div id="auth-tabs">
+                <button id="signup-tab" class="active-tab" onclick="showSignup()">Sign Up</button>
+                <button id="login-tab" onclick="showLogin()">Login</button>
+            </div>
+
+            <!-- Sign-Up Form -->
             <div id="auth-section" class="active">
                 <h2>Sign Up</h2>
                 <form id="signup-form">
-                    <input type="text" id="username" placeholder="Username" required><br>
-                    <input type="password" id="password" placeholder="Password" required><br>
-                    <input type="text" id="wallet" placeholder="Wallet Address" required><br>
+                    <input type="text" id="signup-username" placeholder="Username" required><br>
+                    <input type="password" id="signup-password" placeholder="Password" required><br>
+                    <input type="text" id="signup-wallet" placeholder="Wallet Address" required><br>
                     <button type="submit" class="button">Sign Up</button>
+                </form>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-section" class="hidden">
+                <h2>Login</h2>
+                <form id="login-form">
+                    <input type="text" id="login-username" placeholder="Username" required><br>
+                    <input type="password" id="login-password" placeholder="Password" required><br>
+                    <button type="submit" class="button">Login</button>
                 </form>
             </div>
 
@@ -50,4 +66,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
