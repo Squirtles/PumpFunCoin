@@ -16,6 +16,8 @@ body {
     text-align: left;
     height: 100%;
     position: fixed;
+    top: 0;
+    left: 0;
 }
 
 #sidebar h3 {
@@ -33,11 +35,13 @@ body {
 
 /* Content Area */
 #content {
-    margin-left: 220px;
+    margin-left: 220px; /* Adjusted to account for sidebar */
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .content-wrapper {
