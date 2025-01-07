@@ -14,34 +14,36 @@
     </div>
 
     <div id="content">
-        <h1>Pumpfun Coin Game</h1>
+        <div class="content-wrapper">
+            <h1>Pumpfun Coin Game</h1>
 
-        <!-- Sign-Up / Login -->
-        <div id="auth-section">
-            <h2>Sign Up</h2>
-            <form id="signup-form">
-                <input type="text" id="username" placeholder="Username" required><br>
-                <input type="password" id="password" placeholder="Password" required><br>
-                <input type="text" id="wallet" placeholder="Wallet Address" required><br>
-                <button type="submit" class="button">Sign Up</button>
-            </form>
-        </div>
-
-        <!-- Game Section -->
-        <div id="game-section" class="hidden">
-            <h2>Welcome, <span id="user-display"></span>!</h2>
-            <p>Your Coins: <span id="user-coins">0</span></p>
-            <button class="button" onclick="collectCoin()">Collect Coin</button>
-
-            <h3>Leaderboard</h3>
-            <div id="leaderboard">
-                <ul id="leaderboard-list"></ul>
+            <!-- Sign-Up / Login -->
+            <div id="auth-section">
+                <h2>Sign Up</h2>
+                <form id="signup-form">
+                    <input type="text" id="username" placeholder="Username" required><br>
+                    <input type="password" id="password" placeholder="Password" required><br>
+                    <input type="text" id="wallet" placeholder="Wallet Address" required><br>
+                    <button type="submit" class="button">Sign Up</button>
+                </form>
             </div>
 
-            <h3>Chat</h3>
-            <div id="chat-box"></div>
-            <input type="text" id="chat-input" placeholder="Type your message...">
-            <button class="button" onclick="sendMessage()">Send</button>
+            <!-- Game Section -->
+            <div id="game-section" class="hidden">
+                <h2>Welcome, <span id="user-display"></span>!</h2>
+                <p>Your Coins: <span id="user-coins">0</span></p>
+                <button class="button" onclick="collectCoin()">Collect Coin</button>
+
+                <h3>Leaderboard</h3>
+                <div id="leaderboard">
+                    <ul id="leaderboard-list"></ul>
+                </div>
+
+                <h3>Chat</h3>
+                <div id="chat-box"></div>
+                <input type="text" id="chat-input" placeholder="Type your message...">
+                <button class="button" onclick="sendMessage()">Send</button>
+            </div>
         </div>
     </div>
 
