@@ -11,19 +11,19 @@ async function fetchBackend(url, method = 'POST', body = null) {
 
         const response = await fetch(`/api/${url}`, options);
 
-        // Check if response is OK
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Server Error:', errorText);
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
-        // Check if there is content before attempting to parse
-        const text = await response.text();
-        if (text.trim().length > 0) {
-            return JSON.parse(text);
+        const contentType = response.headers.get('Content-Type');
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
         } else {
-            return {}; // Return an empty object for empty responses
+            const text = await response.text();
+            console.warn('Non-JSON Response:', text);
+            throw new Error('Expected JSON, but received non-JSON response');
         }
     } catch (error) {
         console.error('Fetch Error:', error.message);
