@@ -3,170 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pumpfun Coin Game</title>
+    <title>Pumpfun Coin</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
             background-color: #f4f4f9;
-            padding: 20px;
-            margin: 0;
-            display: flex;
         }
-        #sidebar {
-            width: 200px;
-            background-color: #20232a;
-            color: white;
-            padding: 20px;
-            text-align: left;
-            height: 100vh;
-            position: fixed;
-        }
-        #content {
-            margin-left: 220px;
-            width: calc(100% - 220px);
-            padding: 20px;
-        }
-        a {
-            color: #61dafb;
-            text-decoration: none;
+        .coin {
+            font-size: 80px;
+            color: #FFD700;
         }
         .button {
             padding: 10px 20px;
             font-size: 16px;
-            margin: 10px;
+            margin: 20px;
             cursor: pointer;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
         }
-        #chat-box {
-            width: 80%;
-            margin: 20px auto;
-            height: 150px;
-            overflow-y: scroll;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background: #fff;
-        }
-        #leaderboard {
-            margin-top: 20px;
-            text-align: left;
-        }
     </style>
 </head>
 <body>
-    <div id="sidebar">
-        <h3>Community</h3>
-        <p><a href="https://discord.gg/rzG8V5d4K6" target="_blank">Join the Trenches Discord</a></p>
-        <p><a href="https://x.com/SquirtIes" target="_blank">Dev's Twitter</a></p>
-    </div>
-
-    <div id="content">
-        <h1>Pumpfun Coin Game</h1>
-
-        <!-- Sign-Up / Login -->
-        <div id="auth-section">
-            <h2>Sign Up</h2>
-            <form id="signup-form">
-                <input type="text" id="username" placeholder="Username" required><br>
-                <input type="password" id="password" placeholder="Password" required><br>
-                <input type="text" id="wallet" placeholder="Wallet Address" required><br>
-                <button type="submit" class="button">Sign Up</button>
-            </form>
-        </div>
-
-        <!-- Game Section -->
-        <div id="game-section" class="hidden">
-            <h2>Welcome, <span id="user-display"></span>!</h2>
-            <p>Your Coins: <span id="user-coins">0</span></p>
-            <button class="button" onclick="collectCoin()">Collect Coin</button>
-
-            <h3>Leaderboard</h3>
-            <div id="leaderboard">
-                <ul id="leaderboard-list"></ul>
-            </div>
-
-            <h3>Chat</h3>
-            <div id="chat-box"></div>
-            <input type="text" id="chat-input" placeholder="Type your message...">
-            <button class="button" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
+    <h1>Pumpfun Coin</h1>
+    <p class="coin">💰</p>
+    <p>Total Pumpfun Coins: <span id="coin-count">0</span></p>
+    <button class="button" onclick="mintCoin()">Mint a Coin</button>
 
     <script>
-        async function fetchBackend(endpoint, method = 'GET', body = null) {
-            const options = { method, headers: { 'Content-Type': 'application/json' } };
-            if (body) options.body = JSON.stringify(body);
-            const response = await fetch(endpoint, options);
-            return response.json();
-        }
+        let coinCount = localStorage.getItem('coinCount') || 0;
 
-        const authSection = document.getElementById('auth-section');
-        const gameSection = document.getElementById('game-section');
-        const leaderboardList = document.getElementById('leaderboard-list');
-        const chatBox = document.getElementById('chat-box');
-        const userCoinsDisplay = document.getElementById('user-coins');
-        let currentUser = null;
+        document.getElementById('coin-count').textContent = coinCount;
 
-        document.getElementById('signup-form').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const wallet = document.getElementById('wallet').value;
-            const response = await fetchBackend('/signup', 'POST', { username, password, wallet });
-            if (response.success) {
-                alert('Sign up successful!');
-                currentUser = response.user;
-                loadUser();
-            } else {
-                alert(response.message);
-            }
-        });
-
-        async function collectCoin() {
-            if (currentUser) {
-                const response = await fetchBackend('/collect', 'POST', { username: currentUser.username });
-                if (response.success) {
-                    currentUser.coins = response.coins;
-                    userCoinsDisplay.textContent = currentUser.coins;
-                    loadLeaderboard();
-                }
-            }
-        }
-
-        async function loadUser() {
-            authSection.classList.add('hidden');
-            gameSection.classList.remove('hidden');
-            document.getElementById('user-display').textContent = currentUser.username;
-            userCoinsDisplay.textContent = currentUser.coins;
-            loadLeaderboard();
-            loadChat();
-        }
-
-        async function loadLeaderboard() {
-            const response = await fetchBackend('/leaderboard');
-            leaderboardList.innerHTML = response.leaderboard
-                .map(user => `<li>${user.username}: ${user.coins} coins</li>`)
-                .join('');
-        }
-
-        async function loadChat() {
-            const response = await fetchBackend('/chat');
-            chatBox.innerHTML = response.messages
-                .map(msg => `<p><b>${msg.username}:</b> ${msg.message}</p>`)
-                .join('');
-        }
-
-        async function sendMessage() {
-            const message = document.getElementById('chat-input').value;
-            if (message.trim() && currentUser) {
-                const response = await fetchBackend('/chat', 'POST', { username: currentUser.username, message });
-                if (response.success) {
-                    document.getElementById('chat-input').value = '';
-                    loadChat();
-                }
-            }
+        function mintCoin() {
+            coinCount++;
+            localStorage.setItem('coinCount', coinCount);
+            document.getElementById('coin-count').textContent = coinCount;
         }
     </script>
 </body>
