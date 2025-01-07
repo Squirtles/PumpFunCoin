@@ -21,11 +21,20 @@ document.getElementById('signup-form').addEventListener('submit', async function
     if (response.success) {
         alert('Sign up successful!');
         currentUser = response.user;
-        loadUser();
+        transitionToGame();
     } else {
         alert(response.message);
     }
 });
+
+function transitionToGame() {
+    authSection.classList.add('hidden');
+    gameSection.classList.remove('hidden');
+    document.getElementById('user-display').textContent = currentUser.username;
+    userCoinsDisplay.textContent = currentUser.coins;
+    loadLeaderboard();
+    loadChat();
+}
 
 async function collectCoin() {
     if (currentUser) {
@@ -36,15 +45,6 @@ async function collectCoin() {
             loadLeaderboard();
         }
     }
-}
-
-async function loadUser() {
-    authSection.classList.add('hidden');
-    gameSection.classList.remove('hidden');
-    document.getElementById('user-display').textContent = currentUser.username;
-    userCoinsDisplay.textContent = currentUser.coins;
-    loadLeaderboard();
-    loadChat();
 }
 
 async function loadLeaderboard() {
