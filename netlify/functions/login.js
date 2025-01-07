@@ -1,6 +1,5 @@
 exports.handler = async (event) => {
     try {
-        // Allow only POST requests
         if (event.httpMethod !== 'POST') {
             return {
                 statusCode: 405,
@@ -8,44 +7,35 @@ exports.handler = async (event) => {
             };
         }
 
-        // Parse the request body
-        let parsedBody;
-        try {
-            parsedBody = JSON.parse(event.body);
-        } catch (parseError) {
-            console.error('Body Parsing Error:', parseError);
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ success: false, error: 'Invalid JSON body' }),
-            };
-        }
-
+        const parsedBody = JSON.parse(event.body); // Parse incoming JSON body
         const { username, password } = parsedBody;
 
         if (!username || !password) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Username and password are required.',
-                }),
+                body: JSON.stringify({ success: false, error: 'Username and password are required.' }),
             };
         }
 
-        // Simulate a user database
-        const users = {
-            john_doe: { username: 'john_doe', password: 'securepassword', coins: 10 },
+        // Your hardcoded user data
+        const data = {
+            users: {
+                john_doe: {
+                    username: 'john_doe',
+                    password: 'securepassword',
+                    wallet: '0x12345',
+                    coins: 10,
+                },
+            },
         };
 
-        // Find user
-        const user = users[username];
+        // Access the user by username
+        const user = data.users[username];
+
         if (!user || user.password !== password) {
             return {
                 statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Invalid username or password.',
-                }),
+                body: JSON.stringify({ success: false, error: 'Invalid username or password.' }),
             };
         }
 
@@ -57,20 +47,16 @@ exports.handler = async (event) => {
                 message: 'Login successful.',
                 user: {
                     username: user.username,
-                    coins: user.coins, // Do not include sensitive data like password
+                    coins: user.coins,
+                    wallet: user.wallet, // Include wallet if needed
                 },
             }),
         };
     } catch (error) {
-        // Catch-all error handling
         console.error('Unexpected Error:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-                error: 'Internal Server Error',
-                details: error.message,
-            }),
+            body: JSON.stringify({ success: false, error: 'Internal Server Error', details: error.message }),
         };
     }
 };
