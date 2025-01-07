@@ -9,7 +9,7 @@ exports.handler = async (event) => {
     try {
         const { username, password } = JSON.parse(event.body);
 
-        // Simulate user data (replace with your actual data fetching logic)
+        // Example user data
         const users = {
             test_user: { username: 'test_user', password: 'test_password', coins: 10 },
         };
@@ -27,6 +27,7 @@ exports.handler = async (event) => {
             body: JSON.stringify({ success: true, user }),
         };
     } catch (error) {
+        console.error('Login Error:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: error.message }),
