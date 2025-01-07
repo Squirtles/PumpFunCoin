@@ -5,16 +5,14 @@ async function fetchBackend(endpoint, method = 'GET', body = null) {
     try {
         const response = await fetch(`/.netlify/functions/${endpoint}`, options);
 
-        // Handle non-OK status codes
+        // Check if response is valid
         if (!response.ok) {
-            console.error(`HTTP Error: ${response.status}`);
-            throw new Error(`HTTP Error: ${response.status}`);
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        // Check if response has content
+        // Handle empty response body
         const text = await response.text();
         if (!text) {
-            console.error('Empty response body');
             throw new Error('Empty response body');
         }
 
