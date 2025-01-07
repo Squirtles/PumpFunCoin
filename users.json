@@ -1,0 +1,16 @@
+{
+    "users": {
+        "john_doe": {
+            "username": "john_doe",
+            "password": "securepassword",
+            "wallet": "0x12345",
+            "coins": 10
+        },
+        "jane_doe": {
+            "username": "jane_doe",
+            "password": "anothersecurepassword",
+            "wallet": "0x67890",
+            "coins": 20
+        }
+    }
+}
