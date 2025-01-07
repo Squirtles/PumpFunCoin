@@ -60,10 +60,30 @@ app.post('/chat', (req, res) => {
     res.json({ success: true });
 });
 
+// Pop-up message endpoint
+app.get('/popup', (req, res) => {
+    const data = readData();
+    const popupMessage = data.popupMessage || "Welcome to Pumpfun Coin! Enjoy the game!";
+
+    res.json({ success: true, message: popupMessage });
+});
+
+// Endpoint to update pop-up message (admin functionality)
+app.post('/popup', (req, res) => {
+    const { message } = req.body;
+    const data = readData();
+
+    data.popupMessage = message;
+    writeData(data);
+
+    res.json({ success: true, message: "Pop-up message updated successfully." });
+});
+
 // Start server
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
 
 // Initialize data file if not exists
 if (!fs.existsSync(DATA_FILE)) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ users: {}, chat: [] }, null, 2));
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ users: {}, chat: [], popupMessage: "Welcome to Pumpfun Coin!" }, null, 2));
 }
+
