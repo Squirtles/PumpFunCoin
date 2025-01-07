@@ -35,7 +35,7 @@ body {
 
 /* Content Area */
 #content {
-    margin-left: 220px;
+    margin-left: 220px; /* Adjusted to account for sidebar */
     flex: 1;
     display: flex;
     justify-content: center;
@@ -80,6 +80,15 @@ form input {
     background-color: #45a049;
 }
 
+/* Hidden Section */
+.hidden {
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
 /* Game Section */
 #game-section {
     margin-top: 20px;
@@ -110,6 +119,7 @@ form input {
     margin-left: auto;
     margin-right: auto;
 }
+
 
 /* Pop-Up Styling */
 #popup {
