@@ -1,4 +1,10 @@
 {
-  "users": {},
-  "chat": []
+    "users": {
+        "john_doe": {
+            "username": "john_doe",
+            "password": "securepassword",
+            "wallet": "0x12345",
+            "coins": 10
+        }
+    }
 }
