@@ -1,3 +1,6 @@
+const fs = require('fs').promises;
+const path = require('path');
+
 exports.handler = async (event) => {
     try {
         if (event.httpMethod !== 'POST') {
@@ -7,35 +10,54 @@ exports.handler = async (event) => {
             };
         }
 
-        const parsedBody = JSON.parse(event.body); // Parse incoming JSON body
+        // Parse the request body
+        let parsedBody;
+        try {
+            parsedBody = JSON.parse(event.body);
+        } catch (parseError) {
+            console.error('Body Parsing Error:', parseError);
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ success: false, error: 'Invalid JSON body' }),
+            };
+        }
+
         const { username, password } = parsedBody;
 
         if (!username || !password) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ success: false, error: 'Username and password are required.' }),
+                body: JSON.stringify({
+                    success: false,
+                    error: 'Username and password are required.',
+                }),
             };
         }
 
-        // Your hardcoded user data
-        const data = {
-            users: {
-                john_doe: {
-                    username: 'john_doe',
-                    password: 'securepassword',
-                    wallet: '0x12345',
-                    coins: 10,
-                },
-            },
-        };
+        // Load all JSON files from the "data" directory
+        const directoryPath = path.join(__dirname, 'data');
+        const files = await fs.readdir(directoryPath);
 
-        // Access the user by username
-        const user = data.users[username];
+        let user = null;
+
+        for (const file of files) {
+            const filePath = path.join(directoryPath, file);
+            const fileContents = await fs.readFile(filePath, 'utf8');
+            const data = JSON.parse(fileContents);
+
+            if (data.users && data.users[username]) {
+                user = data.users[username];
+                break;
+            }
+        }
 
         if (!user || user.password !== password) {
             return {
                 statusCode: 401,
-                body: JSON.stringify({ success: false, error: 'Invalid username or password.' }),
+                body: JSON.stringify({
+                    success: false,
+                    error: 'Invalid username or password.',
+                }),
             };
         }
 
@@ -48,7 +70,7 @@ exports.handler = async (event) => {
                 user: {
                     username: user.username,
                     coins: user.coins,
-                    wallet: user.wallet, // Include wallet if needed
+                    wallet: user.wallet,
                 },
             }),
         };
@@ -56,7 +78,11 @@ exports.handler = async (event) => {
         console.error('Unexpected Error:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ success: false, error: 'Internal Server Error', details: error.message }),
+            body: JSON.stringify({
+                success: false,
+                error: 'Internal Server Error',
+                details: error.message,
+            }),
         };
     }
 };
