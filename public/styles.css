@@ -35,7 +35,7 @@ body {
 
 /* Content Area */
 #content {
-    margin-left: 220px; /* Adjusted to account for sidebar */
+    margin-left: 220px;
     flex: 1;
     display: flex;
     justify-content: center;
