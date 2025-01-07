@@ -3,46 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pumpfun Coin</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f4f4f9;
-        }
-        .coin {
-            font-size: 80px;
-            color: #FFD700;
-        }
-        .button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 20px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-    </style>
+    <title>Pumpfun Coin Game</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Pumpfun Coin</h1>
-    <p class="coin">💰</p>
-    <p>Total Pumpfun Coins: <span id="coin-count">0</span></p>
-    <button class="button" onclick="mintCoin()">Mint a Coin</button>
+    <div id="sidebar">
+        <h3>Community</h3>
+        <p><a href="https://discord.gg/rzG8V5d4K6" target="_blank">Join the Trenches Discord</a></p>
+        <p><a href="https://x.com/SquirtIes" target="_blank">Dev's Twitter</a></p>
+    </div>
 
-    <script>
-        let coinCount = localStorage.getItem('coinCount') || 0;
+    <div id="content">
+        <div class="content-wrapper">
+            <h1>Pumpfun Coin Game</h1>
 
-        document.getElementById('coin-count').textContent = coinCount;
+            <!-- Tabs for switching between Sign-Up and Login -->
+            <div id="auth-tabs">
+                <button id="signup-tab" class="active-tab" onclick="showSignup()">Sign Up</button>
+                <button id="login-tab" onclick="showLogin()">Login</button>
+            </div>
 
-        function mintCoin() {
-            coinCount++;
-            localStorage.setItem('coinCount', coinCount);
-            document.getElementById('coin-count').textContent = coinCount;
-        }
-    </script>
+            <!-- Sign-Up Form -->
+            <div id="auth-section" class="active">
+                <h2>Sign Up</h2>
+                <form id="signup-form">
+                    <input type="text" id="signup-username" placeholder="Username" required><br>
+                    <input type="password" id="signup-password" placeholder="Password" required><br>
+                    <input type="text" id="signup-wallet" placeholder="Wallet Address" required><br>
+                    <button type="submit" class="button">Sign Up</button>
+                </form>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-section" class="hidden">
+                <h2>Login</h2>
+                <form id="login-form">
+                    <input type="text" id="login-username" placeholder="Username" required><br>
+                    <input type="password" id="login-password" placeholder="Password" required><br>
+                    <button type="submit" class="button">Login</button>
+                </form>
+            </div>
+
+            <!-- Game Section -->
+            <div id="game-section" class="hidden">
+                <h2>Welcome, <span id="user-display"></span>!</h2>
+                <p>Your Coins: <span id="user-coins">0</span></p>
+                <button class="button" onclick="collectCoin()">Collect Coin</button>
+
+                <h3>Leaderboard</h3>
+                <div id="leaderboard">
+                    <ul id="leaderboard-list"></ul>
+                </div>
+
+                <h3>Chat</h3>
+                <div id="chat-box"></div>
+                <input type="text" id="chat-input" placeholder="Type your message...">
+                <button class="button" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
+
