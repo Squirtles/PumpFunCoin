@@ -72,8 +72,10 @@ document.getElementById('login-form').addEventListener('submit', async function 
         }
     } catch (error) {
         alert('Error: Unable to connect to the server.');
+        console.error('Login Error:', error);
     }
 });
+
 
 // Transition to Game
 function transitionToGame() {
