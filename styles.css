@@ -80,6 +80,15 @@ form input {
     background-color: #45a049;
 }
 
+/* Hidden Section */
+.hidden {
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
 /* Game Section */
 #game-section {
     margin-top: 20px;
