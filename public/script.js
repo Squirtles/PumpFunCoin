@@ -1,25 +1,36 @@
-async function fetchBackend(formData) {
+async function fetchBackend(url, method = 'POST', body = null) {
     try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
+        const options = {
+            method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData),
-        });
+        };
 
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(`/api/${url}`, options);
+
+        // Check if response is OK
         if (!response.ok) {
-            // Log server-side errors
             const errorText = await response.text();
             console.error('Server Error:', errorText);
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
-        const data = await response.json(); // This will throw if the body is not valid JSON
-        return data;
+        // Safely parse JSON if response body exists
+        const text = await response.text();
+        if (text) {
+            return JSON.parse(text);
+        } else {
+            return {}; // Return an empty object for empty responses
+        }
     } catch (error) {
         console.error('Fetch Error:', error.message);
         throw error;
     }
 }
+
 
 // Example usage in an event listener
 document.querySelector('form').addEventListener('submit', async (event) => {
