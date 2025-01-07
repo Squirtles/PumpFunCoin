@@ -1,29 +1,43 @@
-async function fetchBackend(endpoint, method = 'GET', body = null) {
-    const options = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body) options.body = JSON.stringify(body);
-
+async function fetchBackend(formData) {
     try {
-        const response = await fetch(`/.netlify/functions/${endpoint}`, options);
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+        });
 
-        // Check for HTTP errors
         if (!response.ok) {
+            // Log server-side errors
+            const errorText = await response.text();
+            console.error('Server Error:', errorText);
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
-        // Check if the response has a body
-        const text = await response.text();
-        if (!text) {
-            throw new Error('Empty response body');
-        }
-
-        // Parse JSON
-        return JSON.parse(text);
+        const data = await response.json(); // This will throw if the body is not valid JSON
+        return data;
     } catch (error) {
-        console.error('Fetch Backend Error:', error);
+        console.error('Fetch Error:', error.message);
         throw error;
     }
 }
 
+// Example usage in an event listener
+document.querySelector('form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = {
+        username: event.target.username.value,
+        password: event.target.password.value,
+    };
+
+    try {
+        const result = await fetchBackend(formData);
+        console.log('Login Success:', result);
+    } catch (error) {
+        console.error('Login Failed:', error.message);
+        // Display user-friendly error message
+        alert('Login failed. Please check your credentials and try again.');
+    }
+});
 
 
 // DOM Elements
