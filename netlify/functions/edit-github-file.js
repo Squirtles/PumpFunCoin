@@ -1,24 +1,23 @@
-const fetch = require("node-fetch");
+const fetch = require('node-fetch');
 
 exports.handler = async (event) => {
-    if (event.httpMethod !== "POST") {
+    if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
-            body: JSON.stringify({ error: "Method Not Allowed" }),
+            body: JSON.stringify({ error: 'Method Not Allowed' }),
         };
     }
 
-    const { newData } = JSON.parse(event.body);
+    const { filePath, newContent } = JSON.parse(event.body);
 
     // GitHub repository configuration
-    const repoOwner = "YourGitHubUsername";
-    const repoName = "YourRepositoryName";
-    const filePath = "public/data.json"; // Path to the file in your repository
-    const branch = "main"; // Branch to edit
-    const token = process.env.GITHUB_TOKEN;
+    const repoOwner = 'YourGitHubUsername';
+    const repoName = 'YourRepositoryName';
+    const branch = 'main';
+    const token = process.env.GITHUB_TOKEN; // Securely access the GitHub token
 
     try {
-        // Step 1: Fetch the current file content from GitHub
+        // Step 1: Fetch the current file metadata from GitHub
         const fileResponse = await fetch(
             `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
             {
@@ -29,43 +28,40 @@ exports.handler = async (event) => {
         );
 
         if (!fileResponse.ok) {
-            throw new Error("Failed to fetch the file from GitHub");
+            throw new Error('Failed to fetch the file from GitHub');
         }
 
         const fileData = await fileResponse.json();
-        const decodedContent = Buffer.from(fileData.content, "base64").toString();
-        const jsonContent = JSON.parse(decodedContent);
+        const fileSha = fileData.sha; // Required for updating files
 
-        // Step 2: Update the file content
-        jsonContent.updatedData = newData;
+        // Step 2: Encode the new content to Base64
+        const encodedContent = Buffer.from(JSON.stringify(newContent, null, 2)).toString('base64');
 
-        // Step 3: Push the updated file back to GitHub
-        const updatedContent = Buffer.from(JSON.stringify(jsonContent, null, 2)).toString("base64");
-
+        // Step 3: Update the file on GitHub
         const updateResponse = await fetch(
             `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
             {
-                method: "PUT",
+                method: 'PUT',
                 headers: {
                     Authorization: `token ${token}`,
-                    "Content-Type": "application/json",
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    message: "Update data.json via Netlify Function",
-                    content: updatedContent,
-                    sha: fileData.sha, // Required for updating the file
+                    message: `Update ${filePath} via Netlify Function`,
+                    content: encodedContent,
+                    sha: fileSha, // Include the SHA of the file to be updated
                     branch,
                 }),
             }
         );
 
         if (!updateResponse.ok) {
-            throw new Error("Failed to update the file on GitHub");
+            throw new Error('Failed to update the file on GitHub');
         }
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ success: true }),
+            body: JSON.stringify({ success: true, message: `${filePath} updated successfully!` }),
         };
     } catch (error) {
         return {
