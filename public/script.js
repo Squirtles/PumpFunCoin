@@ -36,6 +36,29 @@ function transitionToGame() {
     loadChat();
 }
 
+async function fetchBackend(endpoint, method = 'GET', body = null) {
+    const options = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) options.body = JSON.stringify(body);
+    const response = await fetch(`/.netlify/functions/${endpoint}`, options);
+    return response.json();
+}
+
+// Example usage in the sign-up form
+document.getElementById('signup-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const wallet = document.getElementById('wallet').value;
+
+    const response = await fetchBackend('signup', 'POST', { username, password, wallet });
+    if (response.success) {
+        alert('Sign up successful!');
+    } else {
+        alert(response.error || "An error occurred");
+    }
+});
+
+
 async function collectCoin() {
     if (currentUser) {
         const response = await fetchBackend('/collect', 'POST', { username: currentUser.username });
