@@ -106,6 +106,11 @@ document.getElementById('login-form').addEventListener('submit', async function 
 
 // Transition to Game
 function transitionToGame() {
+    if (!currentUser || !currentUser.username || currentUser.coins === undefined) {
+        alert('Invalid user data. Please log in again.');
+        return;
+    }
+
     loginSection.classList.add('hidden');
     authSection.classList.add('hidden');
     gameSection.classList.remove('hidden');
