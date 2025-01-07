@@ -9,8 +9,8 @@
 <body>
     <div id="sidebar">
         <h3>Community</h3>
-        <p><a href="https://discord.gg/rzG8V5d4K6" target="_blank">Join the Trenches Discord</a></p>
-        <p><a href="https://x.com/SquirtIes" target="_blank">Dev's Twitter</a></p>
+        <p><a href="https://discord.gg/rzG8V5d4K6" target="_blank" aria-label="Join Discord">Join the Trenches Discord</a></p>
+        <p><a href="https://x.com/SquirtIes" target="_blank" aria-label="Developer's Twitter">Dev's Twitter</a></p>
     </div>
 
     <div id="content">
@@ -18,19 +18,22 @@
             <h1>Pumpfun Coin Game</h1>
 
             <!-- Tabs for switching between Sign-Up and Login -->
-            <div id="auth-tabs">
-                <button id="signup-tab" class="active-tab" onclick="showSignup()">Sign Up</button>
-                <button id="login-tab" onclick="showLogin()">Login</button>
+            <div id="auth-tabs" role="tablist">
+                <button id="signup-tab" class="active-tab" onclick="showSignup()" aria-selected="true" role="tab">Sign Up</button>
+                <button id="login-tab" onclick="showLogin()" role="tab">Login</button>
             </div>
+
+            <!-- Feedback Message -->
+            <div id="feedback-message" role="alert" class="hidden"></div>
 
             <!-- Sign-Up Form -->
             <div id="auth-section" class="active">
                 <h2>Sign Up</h2>
                 <form id="signup-form">
-                    <input type="text" id="signup-username" placeholder="Username" required><br>
-                    <input type="password" id="signup-password" placeholder="Password" required><br>
-                    <input type="text" id="signup-wallet" placeholder="Wallet Address" required><br>
-                    <button type="submit" class="button">Sign Up</button>
+                    <input type="text" id="signup-username" placeholder="Username" required aria-label="Username"><br>
+                    <input type="password" id="signup-password" placeholder="Password" required aria-label="Password"><br>
+                    <input type="text" id="signup-wallet" placeholder="Wallet Address" required aria-label="Wallet Address"><br>
+                    <button type="submit" class="button" aria-label="Sign Up">Sign Up</button>
                 </form>
             </div>
 
@@ -38,9 +41,9 @@
             <div id="login-section" class="hidden">
                 <h2>Login</h2>
                 <form id="login-form">
-                    <input type="text" id="login-username" placeholder="Username" required><br>
-                    <input type="password" id="login-password" placeholder="Password" required><br>
-                    <button type="submit" class="button">Login</button>
+                    <input type="text" id="login-username" placeholder="Username" required aria-label="Username"><br>
+                    <input type="password" id="login-password" placeholder="Password" required aria-label="Password"><br>
+                    <button type="submit" class="button" aria-label="Login">Login</button>
                 </form>
             </div>
 
@@ -48,7 +51,7 @@
             <div id="game-section" class="hidden">
                 <h2>Welcome, <span id="user-display"></span>!</h2>
                 <p>Your Coins: <span id="user-coins">0</span></p>
-                <button class="button" onclick="collectCoin()">Collect Coin</button>
+                <button class="button" onclick="collectCoin()" aria-label="Collect Coin">Collect Coin</button>
 
                 <h3>Leaderboard</h3>
                 <div id="leaderboard">
@@ -57,12 +60,12 @@
 
                 <h3>Chat</h3>
                 <div id="chat-box"></div>
-                <input type="text" id="chat-input" placeholder="Type your message...">
-                <button class="button" onclick="sendMessage()">Send</button>
+                <input type="text" id="chat-input" placeholder="Type your message..." aria-label="Chat Input">
+                <button class="button" onclick="sendMessage()" aria-label="Send Message">Send</button>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </body>
 </html>
