@@ -19,7 +19,9 @@ async function fetchBackend(url, method = 'POST', body = null) {
 
         const contentType = response.headers.get('Content-Type');
         if (contentType && contentType.includes('application/json')) {
-            return await response.json();
+            const rawText = await response.text(); // First, get the raw text.
+            console.log('Raw Response Text:', rawText); // Log raw response
+            return rawText ? JSON.parse(rawText) : {}; // Parse only if there's content.
         } else {
             const text = await response.text();
             console.warn('Non-JSON Response:', text);
@@ -27,10 +29,9 @@ async function fetchBackend(url, method = 'POST', body = null) {
         }
     } catch (error) {
         console.error('Fetch Error:', error.message);
-        throw error;
+        throw new Error('Network Error: Unable to connect to the server.');
     }
 }
-
 
 // Example usage in an event listener
 document.querySelector('form').addEventListener('submit', async (event) => {
@@ -41,7 +42,7 @@ document.querySelector('form').addEventListener('submit', async (event) => {
     };
 
     try {
-        const result = await fetchBackend(formData);
+        const result = await fetchBackend('login', 'POST', formData); // Added endpoint parameter
         console.log('Login Success:', result);
     } catch (error) {
         console.error('Login Failed:', error.message);
@@ -49,7 +50,6 @@ document.querySelector('form').addEventListener('submit', async (event) => {
         alert('Login failed. Please check your credentials and try again.');
     }
 });
-
 
 // DOM Elements
 const authSection = document.getElementById('auth-section');
@@ -101,8 +101,6 @@ document.getElementById('login-form').addEventListener('submit', async function 
         console.error('Login Error:', error);
     }
 });
-
-
 
 // Transition to Game
 function transitionToGame() {
