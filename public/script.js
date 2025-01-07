@@ -1,10 +1,20 @@
 async function fetchBackend(endpoint, method = 'GET', body = null) {
     const options = { method, headers: { 'Content-Type': 'application/json' } };
     if (body) options.body = JSON.stringify(body);
-    const response = await fetch(`/.netlify/functions/${endpoint}`, options);
-    return response.json();
+
+    try {
+        const response = await fetch(`/.netlify/functions/${endpoint}`, options);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Fetch Backend Error:', error);
+        throw error;
+    }
 }
 
+// DOM Elements
 const authSection = document.getElementById('auth-section');
 const loginSection = document.getElementById('login-section');
 const gameSection = document.getElementById('game-section');
@@ -31,7 +41,7 @@ function showLogin() {
     authSection.classList.remove('active');
 }
 
-// Sign-Up form submission
+// Login form submission
 document.getElementById('login-form').addEventListener('submit', async function (e) {
     e.preventDefault();
 
@@ -49,27 +59,10 @@ document.getElementById('login-form').addEventListener('submit', async function 
         }
     } catch (error) {
         alert('Error: Unable to connect to the server.');
-        console.error(error);
     }
 });
 
-
-// Login form submission
-document.getElementById('login-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-
-    const response = await fetchBackend('login', 'POST', { username, password });
-    if (response.success) {
-        alert('Login successful!');
-        currentUser = response.user;
-        transitionToGame();
-    } else {
-        alert(response.error || "Invalid username or password");
-    }
-});
-
+// Transition to Game
 function transitionToGame() {
     loginSection.classList.add('hidden');
     authSection.classList.add('hidden');
@@ -80,38 +73,58 @@ function transitionToGame() {
     loadChat();
 }
 
+// Collect Coins
 async function collectCoin() {
     if (currentUser) {
-        const response = await fetchBackend('/collect', 'POST', { username: currentUser.username });
-        if (response.success) {
-            currentUser.coins = response.coins;
-            userCoinsDisplay.textContent = currentUser.coins;
-            loadLeaderboard();
+        try {
+            const response = await fetchBackend('collect', 'POST', { username: currentUser.username });
+            if (response.success) {
+                currentUser.coins = response.coins;
+                userCoinsDisplay.textContent = currentUser.coins;
+                loadLeaderboard();
+            }
+        } catch (error) {
+            alert('Error: Unable to collect coins.');
         }
     }
 }
 
+// Load Leaderboard
 async function loadLeaderboard() {
-    const response = await fetchBackend('/leaderboard');
-    leaderboardList.innerHTML = response.leaderboard
-        .map(user => `<li>${user.username}: ${user.coins} coins</li>`)
-        .join('');
+    try {
+        const response = await fetchBackend('leaderboard');
+        leaderboardList.innerHTML = response.leaderboard
+            .map(user => `<li>${user.username}: ${user.coins} coins</li>`)
+            .join('');
+    } catch (error) {
+        console.error('Error loading leaderboard:', error);
+    }
 }
 
+// Load Chat
 async function loadChat() {
-    const response = await fetchBackend('/chat');
-    chatBox.innerHTML = response.messages
-        .map(msg => `<p><b>${msg.username}:</b> ${msg.message}</p>`)
-        .join('');
+    try {
+        const response = await fetchBackend('chat');
+        chatBox.innerHTML = response.messages
+            .map(msg => `<p><b>${msg.username}:</b> ${msg.message}</p>`)
+            .join('');
+    } catch (error) {
+        console.error('Error loading chat:', error);
+    }
 }
 
+// Send Chat Message
 async function sendMessage() {
     const message = document.getElementById('chat-input').value;
     if (message.trim() && currentUser) {
-        const response = await fetchBackend('/chat', 'POST', { username: currentUser.username, message });
-        if (response.success) {
-            document.getElementById('chat-input').value = '';
-            loadChat();
+        try {
+            const response = await fetchBackend('chat', 'POST', { username: currentUser.username, message });
+            if (response.success) {
+                document.getElementById('chat-input').value = '';
+                loadChat();
+            }
+        } catch (error) {
+            alert('Error: Unable to send message.');
         }
     }
 }
