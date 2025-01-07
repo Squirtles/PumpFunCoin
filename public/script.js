@@ -18,9 +18,9 @@ async function fetchBackend(url, method = 'POST', body = null) {
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
-        // Safely parse JSON if response body exists
+        // Check if there is content before attempting to parse
         const text = await response.text();
-        if (text) {
+        if (text.trim().length > 0) {
             return JSON.parse(text);
         } else {
             return {}; // Return an empty object for empty responses
