@@ -8,36 +8,41 @@ exports.handler = async (event) => {
         };
     }
 
-    const { filePath, newContent } = JSON.parse(event.body);
-
-    // GitHub repository configuration
-    const repoOwner = 'YourGitHubUsername';
-    const repoName = 'YourRepositoryName';
-    const branch = 'main';
-    const token = process.env.GITHUB_TOKEN; // Securely access the GitHub token
-
     try {
-        // Step 1: Fetch the current file metadata from GitHub
+        const { filePath, newContent } = JSON.parse(event.body);
+        if (!filePath || !newContent) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: 'File path and new content are required' }),
+            };
+        }
+
+        // GitHub repository configuration
+        const repoOwner = 'YourGitHubUsername';
+        const repoName = 'YourRepositoryName';
+        const branch = 'main';
+        const token = process.env.GITHUB_TOKEN;
+
+        // Step 1: Fetch the current file metadata
         const fileResponse = await fetch(
             `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
             {
-                headers: {
-                    Authorization: `token ${token}`,
-                },
+                headers: { Authorization: `token ${token}` },
             }
         );
 
         if (!fileResponse.ok) {
-            throw new Error('Failed to fetch the file from GitHub');
+            const errorText = await fileResponse.text();
+            throw new Error(`Failed to fetch file metadata: ${errorText}`);
         }
 
         const fileData = await fileResponse.json();
-        const fileSha = fileData.sha; // Required for updating files
+        const fileSha = fileData.sha;
 
-        // Step 2: Encode the new content to Base64
+        // Step 2: Encode new content to Base64
         const encodedContent = Buffer.from(JSON.stringify(newContent, null, 2)).toString('base64');
 
-        // Step 3: Update the file on GitHub
+        // Step 3: Update the file
         const updateResponse = await fetch(
             `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
             {
@@ -49,14 +54,15 @@ exports.handler = async (event) => {
                 body: JSON.stringify({
                     message: `Update ${filePath} via Netlify Function`,
                     content: encodedContent,
-                    sha: fileSha, // Include the SHA of the file to be updated
+                    sha: fileSha,
                     branch,
                 }),
             }
         );
 
         if (!updateResponse.ok) {
-            throw new Error('Failed to update the file on GitHub');
+            const errorText = await updateResponse.text();
+            throw new Error(`Failed to update file: ${errorText}`);
         }
 
         return {
@@ -64,6 +70,7 @@ exports.handler = async (event) => {
             body: JSON.stringify({ success: true, message: `${filePath} updated successfully!` }),
         };
     } catch (error) {
+        console.error('Error:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: error.message }),
