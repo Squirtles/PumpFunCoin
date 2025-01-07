@@ -61,6 +61,8 @@ document.getElementById('login-form').addEventListener('submit', async function 
 
     try {
         const response = await fetchBackend('login', 'POST', { username, password });
+        console.log('Server Response:', response);
+
         if (response.success) {
             alert('Login successful!');
             currentUser = response.user;
@@ -73,6 +75,7 @@ document.getElementById('login-form').addEventListener('submit', async function 
         console.error('Login Error:', error);
     }
 });
+
 
 
 // Transition to Game
