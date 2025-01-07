@@ -9,9 +9,9 @@ exports.handler = async (event) => {
     try {
         const { username, password } = JSON.parse(event.body);
 
-        // Example user data
+        // Simulate user data
         const users = {
-            test_user: { username: 'test_user', password: 'test_password', coins: 10 },
+            john_doe: { username: 'john_doe', password: 'securepassword', coins: 10 },
         };
 
         const user = users[username];
@@ -34,3 +34,4 @@ exports.handler = async (event) => {
         };
     }
 };
+
