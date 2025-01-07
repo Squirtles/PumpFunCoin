@@ -32,21 +32,27 @@ function showLogin() {
 }
 
 // Sign-Up form submission
-document.getElementById('signup-form').addEventListener('submit', async function (e) {
+document.getElementById('login-form').addEventListener('submit', async function (e) {
     e.preventDefault();
-    const username = document.getElementById('signup-username').value;
-    const password = document.getElementById('signup-password').value;
-    const wallet = document.getElementById('signup-wallet').value;
 
-    const response = await fetchBackend('signup', 'POST', { username, password, wallet });
-    if (response.success) {
-        alert('Sign up successful!');
-        currentUser = response.user;
-        transitionToGame();
-    } else {
-        alert(response.error || "An error occurred");
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+        const response = await fetchBackend('login', 'POST', { username, password });
+        if (response.success) {
+            alert('Login successful!');
+            currentUser = response.user;
+            transitionToGame();
+        } else {
+            alert(response.message || 'Invalid username or password');
+        }
+    } catch (error) {
+        alert('Error: Unable to connect to the server.');
+        console.error(error);
     }
 });
+
 
 // Login form submission
 document.getElementById('login-form').addEventListener('submit', async function (e) {
