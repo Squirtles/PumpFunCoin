@@ -1,73 +1,69 @@
-async function fetchBackend(endpoint, method = 'GET', body = null) {
-    const options = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body) options.body = JSON.stringify(body);
-    const response = await fetch(endpoint, options);
-    return response.json();
-}
+const express = require('express');
+const fs = require('fs');
+const bodyParser = require('body-parser');
+const app = express();
 
-const authSection = document.getElementById('auth-section');
-const gameSection = document.getElementById('game-section');
-const leaderboardList = document.getElementById('leaderboard-list');
-const chatBox = document.getElementById('chat-box');
-const userCoinsDisplay = document.getElementById('user-coins');
-let currentUser = null;
+app.use(bodyParser.json());
 
-document.getElementById('signup-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const wallet = document.getElementById('wallet').value;
-    const response = await fetchBackend('/signup', 'POST', { username, password, wallet });
-    if (response.success) {
-        alert('Sign up successful!');
-        currentUser = response.user;
-        loadUser();
-    } else {
-        alert(response.message);
+const DATA_FILE = './data.json';
+
+const readData = () => JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
+const writeData = (data) => fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+
+// Signup endpoint
+app.post('/signup', (req, res) => {
+    const { username, password, wallet } = req.body;
+    const data = readData();
+
+    if (data.users[username]) {
+        return res.json({ success: false, message: 'Username already exists!' });
     }
+
+    data.users[username] = { username, password, wallet, coins: 0 };
+    writeData(data);
+    res.json({ success: true, user: data.users[username] });
 });
 
-async function collectCoin() {
-    if (currentUser) {
-        const response = await fetchBackend('/collect', 'POST', { username: currentUser.username });
-        if (response.success) {
-            currentUser.coins = response.coins;
-            userCoinsDisplay.textContent = currentUser.coins;
-            loadLeaderboard();
-        }
+// Collect coins endpoint
+app.post('/collect', (req, res) => {
+    const { username } = req.body;
+    const data = readData();
+
+    if (data.users[username]) {
+        data.users[username].coins++;
+        writeData(data);
+        return res.json({ success: true, coins: data.users[username].coins });
     }
-}
 
-async function loadUser() {
-    authSection.classList.add('hidden');
-    gameSection.classList.remove('hidden');
-    document.getElementById('user-display').textContent = currentUser.username;
-    userCoinsDisplay.textContent = currentUser.coins;
-    loadLeaderboard();
-    loadChat();
-}
+    res.json({ success: false, message: 'User not found!' });
+});
 
-async function loadLeaderboard() {
-    const response = await fetchBackend('/leaderboard');
-    leaderboardList.innerHTML = response.leaderboard
-        .map(user => `<li>${user.username}: ${user.coins} coins</li>`)
-        .join('');
-}
+// Leaderboard endpoint
+app.get('/leaderboard', (req, res) => {
+    const data = readData();
+    const leaderboard = Object.values(data.users).sort((a, b) => b.coins - a.coins);
+    res.json({ leaderboard });
+});
 
-async function loadChat() {
-    const response = await fetchBackend('/chat');
-    chatBox.innerHTML = response.messages
-        .map(msg => `<p><b>${msg.username}:</b> ${msg.message}</p>`)
-        .join('');
-}
+// Chat endpoints
+app.get('/chat', (req, res) => {
+    const data = readData();
+    res.json({ messages: data.chat });
+});
 
-async function sendMessage() {
-    const message = document.getElementById('chat-input').value;
-    if (message.trim() && currentUser) {
-        const response = await fetchBackend('/chat', 'POST', { username: currentUser.username, message });
-        if (response.success) {
-            document.getElementById('chat-input').value = '';
-            loadChat();
-        }
-    }
+app.post('/chat', (req, res) => {
+    const { username, message } = req.body;
+    const data = readData();
+
+    data.chat.push({ username, message });
+    writeData(data);
+    res.json({ success: true });
+});
+
+// Start server
+app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+
+// Initialize data file if not exists
+if (!fs.existsSync(DATA_FILE)) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ users: {}, chat: [] }, null, 2));
 }
