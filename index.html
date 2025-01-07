@@ -3,156 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pumpfun Coin Game</title>
+    <title>Pumpfun Coin</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            padding: 20px;
             text-align: center;
+            padding: 20px;
+            background-color: #f4f4f9;
         }
-        .hidden {
-            display: none;
+        .coin {
+            font-size: 80px;
+            color: #FFD700;
         }
         .button {
             padding: 10px 20px;
             font-size: 16px;
-            margin: 10px;
+            margin: 20px;
             cursor: pointer;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
         }
-        #chat-box {
-            width: 80%;
-            margin: 20px auto;
-            height: 150px;
-            overflow-y: scroll;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background: #fff;
-        }
-        #leaderboard {
-            margin-top: 20px;
-            text-align: left;
-        }
     </style>
 </head>
 <body>
-    <h1>Pumpfun Coin Game</h1>
-
-    <!-- Sign-Up / Login -->
-    <div id="auth-section">
-        <h2>Sign Up</h2>
-        <form id="signup-form">
-            <input type="text" id="username" placeholder="Username" required><br>
-            <input type="password" id="password" placeholder="Password" required><br>
-            <input type="text" id="wallet" placeholder="Wallet Address" required><br>
-            <button type="submit" class="button">Sign Up</button>
-        </form>
-    </div>
-
-    <!-- Game Section -->
-    <div id="game-section" class="hidden">
-        <h2>Welcome, <span id="user-display"></span>!</h2>
-        <p>Your Coins: <span id="user-coins">0</span></p>
-        <button class="button" onclick="collectCoin()">Collect Coin</button>
-
-        <h3>Leaderboard</h3>
-        <div id="leaderboard">
-            <ul id="leaderboard-list"></ul>
-        </div>
-
-        <h3>Chat</h3>
-        <div id="chat-box"></div>
-        <input type="text" id="chat-input" placeholder="Type your message...">
-        <button class="button" onclick="sendMessage()">Send</button>
-    </div>
+    <h1>Pumpfun Coin</h1>
+    <p class="coin">💰</p>
+    <p>Total Pumpfun Coins: <span id="coin-count">0</span></p>
+    <button class="button" onclick="mintCoin()">Mint a Coin</button>
 
     <script>
-        const users = {}; // Store user data
-        let currentUser = null;
+        let coinCount = localStorage.getItem('coinCount') || 0;
 
-        // Leaderboard and Chat
-        const leaderboard = [];
-        const chatMessages = [];
+        document.getElementById('coin-count').textContent = coinCount;
 
-        // Sign Up
-        document.getElementById('signup-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = btoa(document.getElementById('password').value); // Basic encoding
-            const wallet = document.getElementById('wallet').value;
-
-            if (users[username]) {
-                alert('Username already exists!');
-                return;
-            }
-
-            users[username] = { username, password, wallet, coins: 0 };
-            alert('Sign up successful! You can now play.');
-            loginUser(username);
-        });
-
-        // Login user
-        function loginUser(username) {
-            currentUser = users[username];
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('game-section').classList.remove('hidden');
-            document.getElementById('user-display').textContent = currentUser.username;
-            updateCoins();
-            updateLeaderboard();
-        }
-
-        // Collect Coin
-        function collectCoin() {
-            if (currentUser) {
-                currentUser.coins++;
-                updateCoins();
-                updateLeaderboard();
-            }
-        }
-
-        // Update Coins Display
-        function updateCoins() {
-            document.getElementById('user-coins').textContent = currentUser.coins;
-        }
-
-        // Update Leaderboard
-        function updateLeaderboard() {
-            const leaderboardList = document.getElementById('leaderboard-list');
-            leaderboardList.innerHTML = '';
-
-            // Update leaderboard data
-            leaderboard.length = 0;
-            for (let user in users) {
-                leaderboard.push({ username: users[user].username, coins: users[user].coins });
-            }
-            leaderboard.sort((a, b) => b.coins - a.coins);
-
-            // Render leaderboard
-            leaderboard.forEach(entry => {
-                const li = document.createElement('li');
-                li.textContent = `${entry.username}: ${entry.coins} coins`;
-                leaderboardList.appendChild(li);
-            });
-        }
-
-        // Chat System
-        function sendMessage() {
-            const message = document.getElementById('chat-input').value;
-            if (message.trim() && currentUser) {
-                chatMessages.push({ username: currentUser.username, message });
-                updateChat();
-                document.getElementById('chat-input').value = '';
-            }
-        }
-
-        function updateChat() {
-            const chatBox = document.getElementById('chat-box');
-            chatBox.innerHTML = chatMessages.map(msg => `<p><b>${msg.username}:</b> ${msg.message}</p>`).join('');
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+        function mintCoin() {
+            coinCount++;
+            localStorage.setItem('coinCount', coinCount);
+            document.getElementById('coin-count').textContent = coinCount;
         }
     </script>
 </body>
