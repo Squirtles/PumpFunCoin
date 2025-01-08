@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
+const bcrypt = require('bcrypt');
 
 exports.handler = async (event) => {
-    // Check for POST method
     if (event.httpMethod !== "POST") {
         return {
             statusCode: 405,
@@ -9,13 +9,19 @@ exports.handler = async (event) => {
         };
     }
 
-    // Initialize Supabase client
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+        console.error("Missing Supabase configuration");
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: "Server configuration error. Please try again later." }),
+        };
+    }
+
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
     try {
         const body = JSON.parse(event.body);
 
-        // Validate request body
         if (!body.username || !body.password || !body.wallet) {
             return {
                 statusCode: 400,
@@ -25,12 +31,20 @@ exports.handler = async (event) => {
 
         const { username, password, wallet } = body;
 
+        // Input validation
+        if (username.length < 3 || password.length < 8) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: "Username must be at least 3 characters and password at least 8 characters long." }),
+            };
+        }
+
         // Check if the username already exists
         const { data: existingUser, error: fetchError } = await supabase
             .from('users')
             .select('username')
             .eq('username', username)
-            .maybeSingle(); // Handles cases where no rows are returned
+            .maybeSingle();
 
         if (fetchError) {
             console.error("Supabase Fetch Error:", fetchError);
@@ -47,13 +61,16 @@ exports.handler = async (event) => {
             };
         }
 
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         // Insert new user into Supabase
         const { data, error: insertError } = await supabase.from('users').insert([
             {
                 username,
-                password, // TODO: Hash password before saving (e.g., bcrypt)
+                password: hashedPassword, // Store hashed password
                 wallet,
-                coins: 100, // Initialize with default coins
+                coins: 100, // Default coins
             },
         ]);
 
@@ -61,18 +78,16 @@ exports.handler = async (event) => {
             console.error("Supabase Insert Error:", insertError || "No data returned from insert");
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: "Failed to create user" }),
+                body: JSON.stringify({ error: insertError?.message || "Failed to create user" }),
             };
         }
 
-        // Success response
         return {
             statusCode: 200,
             body: JSON.stringify({ success: true, user: data[0] }),
         };
-
     } catch (error) {
-        console.error("Signup Error:", error.message, error.stack);
+        console.error("Signup Error:", error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "An unexpected error occurred." }),
