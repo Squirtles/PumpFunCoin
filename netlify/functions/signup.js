@@ -1,31 +1,36 @@
-import fetch from "node-fetch";
+const fetch = require("node-fetch");
 
-export const handler = async (event) => {
+exports.handler = async (event) => {
+    if (event.httpMethod !== "POST") {
+        return {
+            statusCode: 405,
+            body: JSON.stringify({ error: "Method Not Allowed" }),
+        };
+    }
+
     try {
-        if (event.httpMethod !== "POST") {
-            return {
-                statusCode: 405,
-                body: JSON.stringify({ error: "Method Not Allowed" }),
-            };
-        }
-
-        const { username, password, wallet } = JSON.parse(event.body);
-
-        if (!username || !password || !wallet) {
+        const { filePath, newContent } = JSON.parse(event.body);
+        if (!filePath || !newContent) {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: "Missing required fields" }),
+                body: JSON.stringify({ error: "File path and new content are required" }),
             };
         }
 
-        // GitHub API Configuration
+        // GitHub repository configuration
         const repoOwner = "Squirtles";
         const repoName = "PumpFunCoin";
-        const filePath = "public/data.json";
         const branch = "main";
         const token = process.env.GITHUB_TOKEN;
 
-        // Step 1: Fetch the data.json file
+        if (!token) {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: "GitHub token is not set in environment variables" }),
+            };
+        }
+
+        // Step 1: Fetch the current file metadata
         const fileResponse = await fetch(
             `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
             {
@@ -34,52 +39,17 @@ export const handler = async (event) => {
         );
 
         if (!fileResponse.ok) {
-            console.error("Error fetching file:", await fileResponse.text());
-            return {
-                statusCode: 500,
-                body: JSON.stringify({ error: "Failed to fetch data.json" }),
-            };
+            const errorText = await fileResponse.text();
+            throw new Error(`Failed to fetch file metadata: ${errorText}`);
         }
 
         const fileData = await fileResponse.json();
-        const decodedContent = Buffer.from(fileData.content, "base64").toString();
-        const jsonContent = JSON.parse(decodedContent);
+        const fileSha = fileData.sha;
 
-        // Step 2: Check if the username already exists
-        if (jsonContent.users[username]) {
-            const existingUser = jsonContent.users[username];
+        // Step 2: Encode new content to Base64
+        const encodedContent = Buffer.from(JSON.stringify(newContent, null, 2)).toString("base64");
 
-            // Check if the provided password matches the stored password
-            if (existingUser.password === password) {
-                return {
-                    statusCode: 200,
-                    body: JSON.stringify({ 
-                        success: true, 
-                        message: "User already exists. Logged in successfully.", 
-                        user: existingUser 
-                    }),
-                };
-            } else {
-                return {
-                    statusCode: 401, // Unauthorized
-                    body: JSON.stringify({ error: "Username already exists but password is incorrect." }),
-                };
-            }
-        }
-
-        // Step 3: Add the new user with coins initialized to 0
-        jsonContent.users[username] = { 
-            username, 
-            password, 
-            wallet, 
-            coins: 0 
-        };
-
-        // Step 4: Update the file on GitHub
-        const updatedContent = Buffer.from(
-            JSON.stringify(jsonContent, null, 2)
-        ).toString("base64");
-
+        // Step 3: Update the file
         const updateResponse = await fetch(
             `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
             {
@@ -89,35 +59,28 @@ export const handler = async (event) => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    message: `Add new user: ${username}`,
-                    content: updatedContent,
-                    sha: fileData.sha, // Required for updating the file
+                    message: `Update ${filePath} via Netlify Function`,
+                    content: encodedContent,
+                    sha: fileSha,
                     branch,
                 }),
             }
         );
 
         if (!updateResponse.ok) {
-            console.error("Error updating file:", await updateResponse.text());
-            return {
-                statusCode: 500,
-                body: JSON.stringify({ error: "Failed to update data.json" }),
-            };
+            const errorText = await updateResponse.text();
+            throw new Error(`Failed to update file: ${errorText}`);
         }
 
         return {
-            statusCode: 201,
-            body: JSON.stringify({ 
-                success: true, 
-                message: "User created successfully", 
-                user: jsonContent.users[username] 
-            }),
+            statusCode: 200,
+            body: JSON.stringify({ success: true, message: `${filePath} updated successfully!` }),
         };
-    } catch (err) {
-        console.error("Unexpected error:", err);
+    } catch (error) {
+        console.error("Error:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: "Unexpected server error" }),
+            body: JSON.stringify({ error: error.message }),
         };
     }
 };
