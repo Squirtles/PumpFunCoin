@@ -30,9 +30,9 @@ exports.handler = async (event) => {
                 .from('users')
                 .select('username')
                 .eq('username', username)
-                .maybeSingle(); // Returns null if no rows are found
+                .maybeSingle(); // Use maybeSingle to avoid errors when no rows are found
 
-            if (fetchError && fetchError.details !== 'Row not found') {
+            if (fetchError) {
                 console.error("Supabase Fetch Error:", fetchError);
                 return {
                     statusCode: 500,
@@ -83,4 +83,3 @@ exports.handler = async (event) => {
         };
     }
 };
-
