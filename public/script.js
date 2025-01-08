@@ -11,32 +11,31 @@ async function fetchBackend(url, method = 'POST', body = null) {
 
         const response = await fetch(`/api/${url}`, options);
 
-        // Check if the response is not OK
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Server Error:', errorText, 'Status:', response.status);
+            console.error('Server Error:', errorText);
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
-        // Handle empty response bodies
-        if (response.headers.get('Content-Length') === '0') {
-            console.warn('Empty Response Body');
-            return {}; // Return an empty object for empty responses
-        }
-
         const contentType = response.headers.get('Content-Type');
+
         if (contentType && contentType.includes('application/json')) {
-            return await response.json(); // Directly parse JSON
+            return await response.json(); // Use the JSON parser directly
+        } else if (contentType && contentType.includes('text/html')) {
+            const html = await response.text();
+            console.error('HTML Response:', html);
+            throw new Error('Received an unexpected HTML response.');
         } else {
             const text = await response.text();
-            console.warn('Non-JSON Response:', text);
-            throw new Error('Expected JSON, but received non-JSON response');
+            console.warn('Unknown Response Type:', text);
+            throw new Error('Expected JSON, but received unknown response type.');
         }
     } catch (error) {
         console.error('Fetch Error:', error.message);
         throw new Error('Network Error: Unable to connect to the server.');
     }
 }
+
 
 
 
