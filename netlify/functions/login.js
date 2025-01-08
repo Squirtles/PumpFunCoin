@@ -7,7 +7,38 @@ exports.handler = async (event) => {
     }
 
     try {
-        const { filePath, newContent } = JSON.parse(event.body);
+        // Parse the request body
+        const requestBody = JSON.parse(event.body);
+
+        // If the request contains login data (username and password)
+        if (requestBody.username && requestBody.password) {
+            const { username, password } = requestBody;
+
+            // Validate required fields
+            if (!username || !password) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: "Username and password are required" }),
+                };
+            }
+
+            // Simulate user authentication (replace with real database/auth logic)
+            if (username === "Squirtles" && password === "password123") {
+                const user = { username, coins: 100 }; // Example user data
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({ success: true, user }),
+                };
+            } else {
+                return {
+                    statusCode: 401,
+                    body: JSON.stringify({ error: "Invalid username or password" }),
+                };
+            }
+        }
+
+        // If the request contains GitHub file update data (filePath and newContent)
+        const { filePath, newContent } = requestBody;
         if (!filePath || !newContent) {
             return {
                 statusCode: 400,
@@ -86,3 +117,4 @@ exports.handler = async (event) => {
         };
     }
 };
+
