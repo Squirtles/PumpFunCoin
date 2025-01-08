@@ -22,6 +22,7 @@ exports.handler = async (event) => {
     try {
         const body = JSON.parse(event.body);
 
+        // Validate required fields
         if (!body.username || !body.password || !body.wallet) {
             return {
                 statusCode: 400,
@@ -50,7 +51,10 @@ exports.handler = async (event) => {
             console.error("Supabase Fetch Error:", fetchError);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: "Failed to check existing users" }),
+                body: JSON.stringify({
+                    error: "Failed to check existing users",
+                    details: fetchError.message || "No additional details provided",
+                }),
             };
         }
 
@@ -74,23 +78,32 @@ exports.handler = async (event) => {
             },
         ]);
 
+        // Log insert response for debugging
+        console.log("Insert Response Data:", data);
+
         if (insertError || !data || data.length === 0) {
             console.error("Supabase Insert Error:", insertError || "No data returned from insert");
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: insertError?.message || "Failed to create user" }),
+                body: JSON.stringify({
+                    error: insertError?.message || "Failed to create user",
+                    details: insertError?.details || "No additional details provided",
+                    hint: insertError?.hint || "No hint provided",
+                }),
             };
         }
 
+        // Success response
         return {
             statusCode: 200,
             body: JSON.stringify({ success: true, user: data[0] }),
         };
     } catch (error) {
-        console.error("Signup Error:", error);
+        console.error("Signup Error:", error.message, error.stack);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "An unexpected error occurred." }),
         };
     }
 };
+
