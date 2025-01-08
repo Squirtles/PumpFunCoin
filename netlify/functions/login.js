@@ -22,31 +22,33 @@ exports.handler = async (event) => {
             };
         }
 
-        // Fetch user from the database
-        const { data: user, error } = await supabase
+        // Fetch user by username
+        const { data: user, error: fetchError } = await supabase
             .from('users')
             .select('*')
             .eq('username', username)
             .single();
 
-        if (error || !user) {
+        if (fetchError || !user) {
+            console.error("Fetch Error or User Not Found:", fetchError);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: "Invalid username or password" }),
             };
         }
 
-        // Compare password with the stored hashed password
+        // Compare provided password with hashed password
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
+            console.error("Invalid Password for User:", username);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: "Invalid username or password" }),
             };
         }
 
-        // Return user data (excluding sensitive information)
+        // Remove sensitive data before sending response
         delete user.password;
 
         return {
