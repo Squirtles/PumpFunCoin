@@ -9,19 +9,19 @@ async function fetchBackend(url, method = 'POST', body = null) {
             options.body = JSON.stringify(body);
         }
 
-        const response = await fetch(`/api/${url}`, options);
+        const response = await fetch(/api/${url}, options);
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Server Error:', errorText, 'Status:', response.status);
-            throw new Error(`HTTP Error: ${response.status}`);
+            console.error('Server Error:', errorText);
+            throw new Error(HTTP Error: ${response.status});
         }
 
         const contentType = response.headers.get('Content-Type');
         if (contentType && contentType.includes('application/json')) {
-            const rawText = await response.text();
-            console.log('Raw Response Text:', rawText);
-            return rawText ? JSON.parse(rawText) : {};
+            const rawText = await response.text(); // First, get the raw text.
+            console.log('Raw Response Text:', rawText); // Log raw response
+            return rawText ? JSON.parse(rawText) : {}; // Parse only if there's content.
         } else {
             const text = await response.text();
             console.warn('Non-JSON Response:', text);
