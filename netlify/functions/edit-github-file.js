@@ -18,8 +18,8 @@ exports.handler = async (event) => {
         }
 
         // GitHub repository configuration
-        const repoOwner = 'YourGitHubUsername';
-        const repoName = 'YourRepositoryName';
+        const repoOwner = 'Squirtles';
+        const repoName = 'PumpFunCoin';
         const branch = 'main';
         const token = process.env.GITHUB_TOKEN;
 
