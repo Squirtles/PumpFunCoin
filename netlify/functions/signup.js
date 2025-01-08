@@ -45,7 +45,7 @@ exports.handler = async (event) => {
         const decodedContent = Buffer.from(fileData.content, "base64").toString();
         const jsonContent = JSON.parse(decodedContent);
 
-        // Step 2: Modify the JSON data
+        // Step 2: Check if the user already exists
         if (jsonContent.users[username]) {
             return {
                 statusCode: 400,
@@ -53,9 +53,15 @@ exports.handler = async (event) => {
             };
         }
 
-        jsonContent.users[username] = { username, password, wallet, coins: 0 };
+        // Step 3: Add the new user with coins initialized to 0
+        jsonContent.users[username] = { 
+            username, 
+            password, 
+            wallet, 
+            coins: 0 
+        };
 
-        // Step 3: Update the file on GitHub
+        // Step 4: Update the file on GitHub
         const updatedContent = Buffer.from(
             JSON.stringify(jsonContent, null, 2)
         ).toString("base64");
@@ -97,3 +103,4 @@ exports.handler = async (event) => {
         };
     }
 };
+
