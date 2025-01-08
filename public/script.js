@@ -107,7 +107,7 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
             currentUser = response.user;
             transitionToGame();
         } else {
-            feedbackMessage.textContent = response?.message || 'Invalid username or password';
+            feedbackMessage.textContent = response?.error || 'Invalid username or password';
             feedbackMessage.classList.remove('hidden');
             feedbackMessage.classList.add('error');
         }
@@ -118,6 +118,7 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
         console.error('Login Error:', error);
     }
 });
+
 
 // Transition to Game
 function transitionToGame() {
