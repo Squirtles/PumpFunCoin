@@ -18,39 +18,20 @@ async function fetchBackend(url, method = 'POST', body = null) {
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
-        const contentType = response.headers.get('Content-Type');
-
-        // Handle JSON responses
-        if (contentType && contentType.includes('application/json')) {
-            try {
-                return await response.json();
-            } catch (jsonError) {
-                console.error('JSON Parse Error:', jsonError);
-                throw new Error('Invalid JSON response');
-            }
+        // Attempt to parse JSON response
+        try {
+            return await response.json();
+        } catch (jsonError) {
+            console.error('JSON Parse Error:', jsonError);
+            throw new Error('Invalid JSON response');
         }
 
-        // Handle empty response bodies
-        const contentLength = response.headers.get('Content-Length');
-        if (contentLength === '0' || contentType === null) {
-            console.warn('Empty Response Body');
-            return {}; // Return an empty object for empty responses
-        }
-
-        // Handle unexpected response types (e.g., HTML)
-        const rawText = await response.text();
-        if (contentType && contentType.includes('text/html')) {
-            console.error('HTML Response:', rawText);
-            throw new Error('Received an unexpected HTML response.');
-        }
-
-        console.warn('Unknown Response Type:', rawText);
-        throw new Error('Unexpected response format');
     } catch (error) {
         console.error('Fetch Error:', error.message);
         throw new Error('Network Error: Unable to connect to the server.');
     }
 }
+
 
 // DOM Elements
 const authSection = document.getElementById('auth-section');
