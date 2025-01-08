@@ -9,35 +9,29 @@ async function fetchBackend(url, method = 'POST', body = null) {
             options.body = JSON.stringify(body);
         }
 
-        const response = await fetch(`/api/${url}`, options);
+        const response = await fetch(/api/${url}, options);
 
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Server Error:', errorText);
-            throw new Error(`HTTP Error: ${response.status}`);
+            throw new Error(HTTP Error: ${response.status});
         }
 
         const contentType = response.headers.get('Content-Type');
-
         if (contentType && contentType.includes('application/json')) {
-            return await response.json(); // Use the JSON parser directly
-        } else if (contentType && contentType.includes('text/html')) {
-            const html = await response.text();
-            console.error('HTML Response:', html);
-            throw new Error('Received an unexpected HTML response.');
+            const rawText = await response.text(); // First, get the raw text.
+            console.log('Raw Response Text:', rawText); // Log raw response
+            return rawText ? JSON.parse(rawText) : {}; // Parse only if there's content.
         } else {
             const text = await response.text();
-            console.warn('Unknown Response Type:', text);
-            throw new Error('Expected JSON, but received unknown response type.');
+            console.warn('Non-JSON Response:', text);
+            throw new Error('Expected JSON, but received non-JSON response');
         }
     } catch (error) {
         console.error('Fetch Error:', error.message);
         throw new Error('Network Error: Unable to connect to the server.');
     }
 }
-
-
-
 
 // Example usage in an event listener
 document.querySelector('form').addEventListener('submit', async (event) => {
