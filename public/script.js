@@ -117,16 +117,16 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
         const data = await response.json();
         console.log('Login Successful:', data);
 
-        // Handle successful login (e.g., redirect to game)
         if (data.success) {
             localStorage.setItem('currentUser', JSON.stringify(data.user));
-            window.location.href = '/game.html'; // Redirect to the game page
+            window.location.href = '/game.html'; // Redirect to game page
         }
     } catch (error) {
         console.error('Login Error:', error.message);
         alert('An unexpected error occurred. Please try again.');
     }
 });
+
 
 
 // Transition to Game
