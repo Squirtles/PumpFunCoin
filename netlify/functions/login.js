@@ -30,14 +30,14 @@ exports.handler = async (event) => {
             .single();
 
         if (fetchError || !user) {
-            console.error("Fetch Error or User Not Found:", fetchError);
+            console.error("User Fetch Error:", fetchError);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: "Invalid username or password" }),
             };
         }
 
-        // Compare provided password with hashed password
+        // Compare provided password with stored hashed password
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
@@ -48,7 +48,7 @@ exports.handler = async (event) => {
             };
         }
 
-        // Remove sensitive data before sending response
+        // Success: Remove sensitive data before sending user object
         delete user.password;
 
         return {
