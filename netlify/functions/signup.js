@@ -9,7 +9,36 @@ exports.handler = async (event) => {
     }
 
     try {
-        const { filePath, newContent } = JSON.parse(event.body);
+        const body = JSON.parse(event.body);
+
+        // Check if this is a signup request
+        if (body.username && body.password && body.wallet) {
+            const { username, password, wallet } = body;
+
+            // Validate required fields for signup
+            if (!username || !password || !wallet) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: "Username, password, and wallet are required" }),
+                };
+            }
+
+            // Simulate signup logic (e.g., saving to a database)
+            // Replace this with actual database logic as needed
+            const user = {
+                username,
+                wallet,
+                coins: 100, // Initialize with some default coins
+            };
+
+            return {
+                statusCode: 200,
+                body: JSON.stringify({ success: true, user }),
+            };
+        }
+
+        // Proceed with GitHub file update logic
+        const { filePath, newContent } = body;
         if (!filePath || !newContent) {
             return {
                 statusCode: 400,
