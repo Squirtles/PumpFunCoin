@@ -6,8 +6,8 @@ const cors = require('cors');
 const app = express();
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Securely stored
-const REPO_OWNER = 'YourGitHubUsername';
-const REPO_NAME = 'YourRepositoryName';
+const REPO_OWNER = 'Squirtles';
+const REPO_NAME = 'PumpFunCoin';
 const FILE_PATH = 'data.json';
 const BRANCH = 'main';
 
