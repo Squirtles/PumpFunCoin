@@ -9,14 +9,6 @@ exports.handler = async (event) => {
         };
     }
 
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
-        console.error("Missing Supabase configuration");
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: "Server configuration error. Please try again later." }),
-        };
-    }
-
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
     try {
@@ -37,8 +29,10 @@ exports.handler = async (event) => {
             .eq('username', username)
             .single();
 
+        console.log("Fetched User:", user);
+        console.log("Fetch Error:", fetchError);
+
         if (fetchError || !user) {
-            console.error("User Fetch Error:", fetchError);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: "Invalid username or password" }),
@@ -47,9 +41,9 @@ exports.handler = async (event) => {
 
         // Compare provided password with stored hashed password
         const isPasswordValid = await bcrypt.compare(password, user.password);
+        console.log("Password Valid:", isPasswordValid);
 
         if (!isPasswordValid) {
-            console.error("Invalid Password for User:", username);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: "Invalid username or password" }),
