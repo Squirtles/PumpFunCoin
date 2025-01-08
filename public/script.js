@@ -95,29 +95,34 @@ document.getElementById('signup-form').addEventListener('submit', async (event) 
 
 // Login form submission
 document.getElementById('login-form').addEventListener('submit', async (event) => {
-    event.preventDefault(); // Prevent form from reloading the page
+    event.preventDefault();
 
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
 
     try {
-        const response = await fetchBackend('login', 'POST', { username, password });
+        const response = await fetch('/.netlify/functions/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
 
-        if (response?.success) {
-            currentUser = response.user;
-            transitionToGame();
-        } else {
-            feedbackMessage.textContent = response?.error || 'Invalid username or password';
-            feedbackMessage.classList.remove('hidden');
-            feedbackMessage.classList.add('error');
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Server Error:', errorData);
+            throw new Error(errorData.error || 'Login failed');
         }
+
+        const data = await response.json();
+        console.log('Login Successful:', data);
+
+        // Handle successful login (e.g., transition to the dashboard)
     } catch (error) {
-        feedbackMessage.textContent = 'Error: Unable to connect to the server.';
-        feedbackMessage.classList.remove('hidden');
-        feedbackMessage.classList.add('error');
-        console.error('Login Error:', error);
+        console.error('Login Error:', error.message);
+        alert('Login failed: ' + error.message);
     }
 });
+
 
 
 // Transition to Game
