@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const bcrypt = require('bcrypt'); // For password hashing
 
 exports.handler = async (event) => {
     if (event.httpMethod !== "POST") {
@@ -21,20 +22,32 @@ exports.handler = async (event) => {
             };
         }
 
-        // Fetch user from Supabase database
-        const { data: user, error } = await supabase
+        // Fetch user by username
+        const { data: user, error: fetchError } = await supabase
             .from('users')
             .select('*')
             .eq('username', username)
-            .eq('password', password) // In production, use hashed passwords
-            .single();
+            .single(); // Use single() since username should be unique
 
-        if (error || !user) {
+        if (fetchError || !user) {
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: "Invalid username or password" }),
             };
         }
+
+        // Compare plaintext password with hashed password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            return {
+                statusCode: 401,
+                body: JSON.stringify({ error: "Invalid username or password" }),
+            };
+        }
+
+        // Remove sensitive data before sending the response
+        delete user.password;
 
         return {
             statusCode: 200,
@@ -44,7 +57,7 @@ exports.handler = async (event) => {
         console.error("Login Error:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: error.message }),
+            body: JSON.stringify({ error: "An unexpected error occurred." }),
         };
     }
 };
