@@ -13,15 +13,15 @@ async function fetchBackend(url, method = 'POST', body = null) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Server Error:', errorText);
+            console.error('Server Error:', errorText, 'Status:', response.status);
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
         const contentType = response.headers.get('Content-Type');
         if (contentType && contentType.includes('application/json')) {
-            const rawText = await response.text(); // First, get the raw text.
-            console.log('Raw Response Text:', rawText); // Log raw response
-            return rawText ? JSON.parse(rawText) : {}; // Parse only if there's content.
+            const rawText = await response.text();
+            console.log('Raw Response Text:', rawText);
+            return rawText ? JSON.parse(rawText) : {};
         } else {
             const text = await response.text();
             console.warn('Non-JSON Response:', text);
@@ -32,6 +32,7 @@ async function fetchBackend(url, method = 'POST', body = null) {
         throw new Error('Network Error: Unable to connect to the server.');
     }
 }
+
 
 // Example usage in an event listener
 document.querySelector('form').addEventListener('submit', async (event) => {
