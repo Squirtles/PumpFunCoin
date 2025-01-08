@@ -37,6 +37,7 @@ async function fetchBackend(url, method = 'POST', body = null) {
 }
 
 
+
 // Example usage in an event listener
 document.querySelector('form').addEventListener('submit', async (event) => {
     event.preventDefault();
