@@ -9,6 +9,14 @@ exports.handler = async (event) => {
         };
     }
 
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+        console.error("Missing Supabase configuration");
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: "Server configuration error. Please try again later." }),
+        };
+    }
+
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
     try {
