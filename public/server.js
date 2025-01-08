@@ -2,85 +2,74 @@ require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
-const fs = require('fs');
-
+const cors = require('cors');
 const app = express();
 
-app.use(bodyParser.json());
-
-// GitHub API configuration
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Securely stored
 const REPO_OWNER = 'YourGitHubUsername';
 const REPO_NAME = 'YourRepositoryName';
 const FILE_PATH = 'data.json';
 const BRANCH = 'main';
 
+app.use(bodyParser.json());
+app.use(cors());
+
 // Helper function to fetch data.json from GitHub
 const fetchDataFromGitHub = async () => {
-    try {
-        const response = await fetch(
-            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=${BRANCH}`,
-            {
-                headers: { Authorization: `token ${GITHUB_TOKEN}` },
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error(`GitHub API error: ${response.statusText}`);
+    const response = await fetch(
+        `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=${BRANCH}`,
+        {
+            headers: { Authorization: `token ${GITHUB_TOKEN}` },
         }
+    );
 
-        const fileData = await response.json();
-        const content = Buffer.from(fileData.content, 'base64').toString();
-        return { data: JSON.parse(content), sha: fileData.sha };
-    } catch (error) {
-        console.error('Failed to fetch data from GitHub:', error.message);
-        throw error;
+    if (!response.ok) {
+        throw new Error(`Failed to fetch data.json from GitHub: ${response.statusText}`);
     }
+
+    const fileData = await response.json();
+    const content = Buffer.from(fileData.content, 'base64').toString();
+    return { data: JSON.parse(content), sha: fileData.sha };
 };
 
 // Helper function to write data.json to GitHub
 const writeDataToGitHub = async (newData, sha) => {
-    try {
-        const encodedContent = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64');
+    const encodedContent = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64');
 
-        const response = await fetch(
-            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`,
-            {
-                method: 'PUT',
-                headers: {
-                    Authorization: `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: 'Update data.json',
-                    content: encodedContent,
-                    sha,
-                    branch: BRANCH,
-                }),
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error(`GitHub API error: ${response.statusText}`);
+    const response = await fetch(
+        `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`,
+        {
+            method: 'PUT',
+            headers: {
+                Authorization: `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: 'Update data.json',
+                content: encodedContent,
+                sha,
+                branch: BRANCH,
+            }),
         }
+    );
 
-        return response.json();
-    } catch (error) {
-        console.error('Failed to write data to GitHub:', error.message);
-        throw error;
+    if (!response.ok) {
+        throw new Error(`Failed to update data.json on GitHub: ${response.statusText}`);
     }
+
+    return response.json();
 };
 
-// Example: Signup endpoint
+// Signup endpoint
 app.post('/signup', async (req, res) => {
     const { username, password, wallet } = req.body;
+
     if (!username || !password || !wallet) {
-        return res.status(400).json({ success: false, message: "Missing required fields" });
+        return res.status(400).json({ success: false, message: 'Missing required fields.' });
     }
 
     try {
         const { data, sha } = await fetchDataFromGitHub();
-
         if (data.users[username]) {
             return res.status(409).json({ success: false, message: 'Username already exists!' });
         }
@@ -90,14 +79,15 @@ app.post('/signup', async (req, res) => {
 
         res.json({ success: true, user: data.users[username] });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Internal server error." });
+        res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again later.' });
     }
 });
 
 // Collect coins endpoint
 app.post('/collect', async (req, res) => {
+    const { username } = req.body;
+
     try {
-        const { username } = req.body;
         const { data, sha } = await fetchDataFromGitHub();
 
         if (data.users[username]) {
@@ -106,9 +96,9 @@ app.post('/collect', async (req, res) => {
             return res.json({ success: true, coins: data.users[username].coins });
         }
 
-        res.json({ success: false, message: 'User not found!' });
+        res.status(404).json({ success: false, message: 'User not found!' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again later.' });
     }
 });
 
@@ -117,9 +107,9 @@ app.get('/leaderboard', async (req, res) => {
     try {
         const { data } = await fetchDataFromGitHub();
         const leaderboard = Object.values(data.users).sort((a, b) => b.coins - a.coins);
-        res.json({ leaderboard });
+        res.json({ success: true, leaderboard });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again later.' });
     }
 });
 
@@ -173,8 +163,10 @@ app.post('/popup', async (req, res) => {
     }
 });
 
+// Other endpoints (chat, popup) remain similar...
 // Start server
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+
 
 
 // Initialize data file if not exists
