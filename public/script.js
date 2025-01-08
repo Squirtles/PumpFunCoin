@@ -25,13 +25,11 @@ async function fetchBackend(url, method = 'POST', body = null) {
             console.error('JSON Parse Error:', jsonError);
             throw new Error('Invalid JSON response');
         }
-
     } catch (error) {
         console.error('Fetch Error:', error.message);
         throw new Error('Network Error: Unable to connect to the server.');
     }
 }
-
 
 // DOM Elements
 const authSection = document.getElementById('auth-section');
@@ -93,10 +91,7 @@ document.getElementById('signup-form').addEventListener('submit', async (event) 
         feedbackMessage.classList.add('error');
         console.error('Network Error:', error);
     }
-}); // Closing the `signup-form` handler properly
-
-// Closing other parts of the script...
-
+});
 
 // Login form submission
 document.getElementById('login-form').addEventListener('submit', async (event) => {
@@ -123,7 +118,6 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
         console.error('Login Error:', error);
     }
 });
-
 
 // Transition to Game
 function transitionToGame() {
@@ -196,3 +190,4 @@ async function sendMessage() {
         }
     }
 }
+
