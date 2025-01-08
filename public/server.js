@@ -1,71 +1,88 @@
+require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
+const fs = require('fs');
+
 const app = express();
 
 app.use(bodyParser.json());
 
 // GitHub API configuration
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Store this securely in your environment
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = 'YourGitHubUsername';
 const REPO_NAME = 'YourRepositoryName';
-const FILE_PATH = 'data.json'; // Path to data.json in your repo
-const BRANCH = 'main'; // Branch to edit
+const FILE_PATH = 'data.json';
+const BRANCH = 'main';
 
 // Helper function to fetch data.json from GitHub
 const fetchDataFromGitHub = async () => {
-    const response = await fetch(
-        `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=${BRANCH}`,
-        {
-            headers: { Authorization: `token ${GITHUB_TOKEN}` },
+    try {
+        const response = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=${BRANCH}`,
+            {
+                headers: { Authorization: `token ${GITHUB_TOKEN}` },
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`GitHub API error: ${response.statusText}`);
         }
-    );
 
-    if (!response.ok) {
-        throw new Error('Failed to fetch data.json from GitHub');
+        const fileData = await response.json();
+        const content = Buffer.from(fileData.content, 'base64').toString();
+        return { data: JSON.parse(content), sha: fileData.sha };
+    } catch (error) {
+        console.error('Failed to fetch data from GitHub:', error.message);
+        throw error;
     }
-
-    const fileData = await response.json();
-    const content = Buffer.from(fileData.content, 'base64').toString();
-    return { data: JSON.parse(content), sha: fileData.sha }; // Return content and file SHA
 };
 
 // Helper function to write data.json to GitHub
 const writeDataToGitHub = async (newData, sha) => {
-    const encodedContent = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64');
+    try {
+        const encodedContent = Buffer.from(JSON.stringify(newData, null, 2)).toString('base64');
 
-    const response = await fetch(
-        `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`,
-        {
-            method: 'PUT',
-            headers: {
-                Authorization: `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: 'Update data.json',
-                content: encodedContent,
-                sha,
-                branch: BRANCH,
-            }),
+        const response = await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`,
+            {
+                method: 'PUT',
+                headers: {
+                    Authorization: `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: 'Update data.json',
+                    content: encodedContent,
+                    sha,
+                    branch: BRANCH,
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`GitHub API error: ${response.statusText}`);
         }
-    );
 
-    if (!response.ok) {
-        throw new Error('Failed to update data.json on GitHub');
+        return response.json();
+    } catch (error) {
+        console.error('Failed to write data to GitHub:', error.message);
+        throw error;
     }
-
-    return response.json();
 };
 
-// Signup endpoint
+// Example: Signup endpoint
 app.post('/signup', async (req, res) => {
+    const { username, password, wallet } = req.body;
+    if (!username || !password || !wallet) {
+        return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
     try {
-        const { username, password, wallet } = req.body;
         const { data, sha } = await fetchDataFromGitHub();
 
         if (data.users[username]) {
-            return res.json({ success: false, message: 'Username already exists!' });
+            return res.status(409).json({ success: false, message: 'Username already exists!' });
         }
 
         data.users[username] = { username, password, wallet, coins: 0 };
@@ -73,7 +90,7 @@ app.post('/signup', async (req, res) => {
 
         res.json({ success: true, user: data.users[username] });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ success: false, message: "Internal server error." });
     }
 });
 
