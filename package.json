@@ -1,0 +1,8 @@
+{
+  "name": "pumpfun-coin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "node-fetch": "^3.2.0"
+  }
+}
