@@ -9,17 +9,16 @@
 [functions]
   directory = "netlify/functions"
 
-[plugins]
-  [[plugins]]
+[[plugins]]
   package = "netlify-plugin-debug-cache"
 
-  [[plugins]]
+[[plugins]]
   package = "netlify-plugin-contextual-env"
 
-  [[plugins]]
+[[plugins]]
   package = "netlify-plugin-checklinks"
 
-    [plugins.inputs]
+  [plugins.inputs]
     exclude_external_links = true
     fail_build_on_broken_links = true
     exclude_paths = [
@@ -27,8 +26,8 @@
       "/another-ignored-path" # Add specific paths as needed
     ]
 
-  [[plugins]]
+[[plugins]]
   package = "netlify-plugin-inline-functions-env"
 
-  [[plugins]]
+[[plugins]]
   package = "netlify-plugin-qawolf"
