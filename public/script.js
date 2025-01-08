@@ -9,19 +9,24 @@ async function fetchBackend(url, method = 'POST', body = null) {
             options.body = JSON.stringify(body);
         }
 
-        const response = await fetch(/api/${url}, options);
+        const response = await fetch(`/api/${url}`, options);
 
+        // Check if the response is not OK
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Server Error:', errorText);
-            throw new Error(HTTP Error: ${response.status});
+            console.error('Server Error:', errorText, 'Status:', response.status);
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        // Handle empty response bodies
+        if (response.headers.get('Content-Length') === '0') {
+            console.warn('Empty Response Body');
+            return {}; // Return an empty object for empty responses
         }
 
         const contentType = response.headers.get('Content-Type');
         if (contentType && contentType.includes('application/json')) {
-            const rawText = await response.text(); // First, get the raw text.
-            console.log('Raw Response Text:', rawText); // Log raw response
-            return rawText ? JSON.parse(rawText) : {}; // Parse only if there's content.
+            return await response.json(); // Directly parse JSON
         } else {
             const text = await response.text();
             console.warn('Non-JSON Response:', text);
@@ -32,6 +37,7 @@ async function fetchBackend(url, method = 'POST', body = null) {
         throw new Error('Network Error: Unable to connect to the server.');
     }
 }
+
 
 
 // Example usage in an event listener
