@@ -45,12 +45,26 @@ exports.handler = async (event) => {
         const decodedContent = Buffer.from(fileData.content, "base64").toString();
         const jsonContent = JSON.parse(decodedContent);
 
-        // Step 2: Check if the user already exists
+        // Step 2: Check if the username already exists
         if (jsonContent.users[username]) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({ error: "Username already exists" }),
-            };
+            const existingUser = jsonContent.users[username];
+
+            // Check if the provided password matches the stored password
+            if (existingUser.password === password) {
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({ 
+                        success: true, 
+                        message: "User already exists. Logged in successfully.", 
+                        user: existingUser 
+                    }),
+                };
+            } else {
+                return {
+                    statusCode: 401, // Unauthorized
+                    body: JSON.stringify({ error: "Username already exists but password is incorrect." }),
+                };
+            }
         }
 
         // Step 3: Add the new user with coins initialized to 0
@@ -92,8 +106,12 @@ exports.handler = async (event) => {
         }
 
         return {
-            statusCode: 200,
-            body: JSON.stringify({ success: true, user: jsonContent.users[username] }),
+            statusCode: 201,
+            body: JSON.stringify({ 
+                success: true, 
+                message: "User created successfully", 
+                user: jsonContent.users[username] 
+            }),
         };
     } catch (err) {
         console.error("Unexpected error:", err);
@@ -103,4 +121,3 @@ exports.handler = async (event) => {
         };
     }
 };
-
