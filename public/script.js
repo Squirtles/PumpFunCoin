@@ -116,14 +116,19 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
         const data = await response.json();
         console.log('Login Successful:', data);
 
-        // Handle successful login (e.g., transition to the dashboard)
+        if (data.success) {
+            // Store user data
+            currentUser = data.user;
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+
+            // Redirect to the game section
+            transitionToGame();
+        }
     } catch (error) {
         console.error('Login Error:', error.message);
         alert('Login failed: ' + error.message);
     }
 });
-
-
 
 // Transition to Game
 function transitionToGame() {
