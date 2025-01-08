@@ -91,27 +91,30 @@ document.getElementById('signup-form').addEventListener('submit', async (event) 
     const wallet = document.getElementById('signup-wallet').value;
 
     try {
-    const response = await fetchBackend('signup', 'POST', { username, password, wallet });
+        const response = await fetchBackend('signup', 'POST', { username, password, wallet });
 
-    if (response?.success) {
-        // Successful signup
-        feedbackMessage.textContent = 'Sign-Up Successful!';
-        feedbackMessage.classList.remove('hidden', 'error');
-        feedbackMessage.classList.add('success');
-        showLogin(); // Switch to Login tab
-    } else {
-        // Backend returned an error
-        feedbackMessage.textContent = `Error: ${response?.error || 'An unknown error occurred. Please try again.'}`;
+        if (response?.success) {
+            // Successful signup
+            feedbackMessage.textContent = 'Sign-Up Successful!';
+            feedbackMessage.classList.remove('hidden', 'error');
+            feedbackMessage.classList.add('success');
+            showLogin(); // Switch to Login tab
+        } else {
+            // Backend returned an error
+            feedbackMessage.textContent = `Error: ${response?.error || 'An unknown error occurred. Please try again.'}`;
+            feedbackMessage.classList.remove('hidden', 'success');
+            feedbackMessage.classList.add('error');
+        }
+    } catch (error) {
+        // Handle network or unexpected errors
+        feedbackMessage.textContent = 'Network Error. Please check your internet connection and try again.';
         feedbackMessage.classList.remove('hidden', 'success');
         feedbackMessage.classList.add('error');
+        console.error('Network Error:', error);
     }
-} catch (error) {
-    // Handle network or unexpected errors
-    feedbackMessage.textContent = 'Network Error. Please check your internet connection and try again.';
-    feedbackMessage.classList.remove('hidden', 'success');
-    feedbackMessage.classList.add('error');
-    console.error('Network Error:', error);
-}
+}); // Closing the `signup-form` handler properly
+
+// Closing other parts of the script...
 
 
 // Login form submission
