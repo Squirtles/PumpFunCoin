@@ -9,13 +9,13 @@ async function fetchBackend(url, method = 'POST', body = null) {
             options.body = JSON.stringify(body);
         }
 
-        const response = await fetch(/.netlify/functions/${url}, options); // Updated to use Netlify function paths
+        const response = await fetch(`/.netlify/functions/${url}`, options); // Updated to use Netlify function paths
 
         // Handle HTTP errors
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Server Error:', errorText);
-            throw new Error(HTTP Error: ${response.status});
+            throw new Error(`HTTP Error: ${response.status}`);
         }
 
         // Attempt to parse JSON response
@@ -80,7 +80,7 @@ document.getElementById('signup-form').addEventListener('submit', async (event) 
             showLogin(); // Switch to Login tab
         } else {
             // Backend returned an error
-            feedbackMessage.textContent = Error: ${response?.error || 'An unknown error occurred. Please try again.'};
+            feedbackMessage.textContent = `Error: ${response?.error || 'An unknown error occurred. Please try again.'}`;
             feedbackMessage.classList.remove('hidden', 'success');
             feedbackMessage.classList.add('error');
         }
@@ -116,14 +116,19 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
         const data = await response.json();
         console.log('Login Successful:', data);
 
-        // Handle successful login (e.g., transition to the dashboard)
+        if (data.success) {
+            // Store user data
+            currentUser = data.user;
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+
+            // Redirect to the game section
+            transitionToGame();
+        }
     } catch (error) {
         console.error('Login Error:', error.message);
         alert('Login failed: ' + error.message);
     }
 });
-
-
 
 // Transition to Game
 function transitionToGame() {
@@ -162,7 +167,7 @@ async function loadLeaderboard() {
     try {
         const response = await fetchBackend('leaderboard');
         leaderboardList.innerHTML = response.leaderboard
-            .map(user => <li>${user.username}: ${user.coins} coins</li>)
+            .map(user => `<li>${user.username}: ${user.coins} coins</li>`)
             .join('');
     } catch (error) {
         console.error('Error loading leaderboard:', error);
@@ -174,7 +179,7 @@ async function loadChat() {
     try {
         const response = await fetchBackend('chat');
         chatBox.innerHTML = response.messages
-            .map(msg => <p><b>${msg.username}:</b> ${msg.message}</p>)
+            .map(msg => `<p><b>${msg.username}:</b> ${msg.message}</p>`)
             .join('');
     } catch (error) {
         console.error('Error loading chat:', error);
