@@ -9,7 +9,7 @@ async function fetchBackend(url, method = 'POST', body = null) {
             options.body = JSON.stringify(body);
         }
 
-        const response = await fetch(`/api/${url}`, options);
+        const response = await fetch(`/.netlify/functions/${url}`, options); // Updated to use Netlify function paths
 
         // Handle HTTP errors
         if (!response.ok) {
@@ -52,27 +52,6 @@ async function fetchBackend(url, method = 'POST', body = null) {
     }
 }
 
-
-
-
-// Example usage in an event listener
-document.querySelector('form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = {
-        username: event.target.username.value,
-        password: event.target.password.value,
-    };
-
-    try {
-        const result = await fetchBackend('login', 'POST', formData); // Added endpoint parameter
-        console.log('Login Success:', result);
-    } catch (error) {
-        console.error('Login Failed:', error.message);
-        // Display user-friendly error message
-        alert('Login failed. Please check your credentials and try again.');
-    }
-});
-
 // DOM Elements
 const authSection = document.getElementById('auth-section');
 const loginSection = document.getElementById('login-section');
@@ -82,6 +61,7 @@ const loginTab = document.getElementById('login-tab');
 const leaderboardList = document.getElementById('leaderboard-list');
 const chatBox = document.getElementById('chat-box');
 const userCoinsDisplay = document.getElementById('user-coins');
+const feedbackMessage = document.getElementById('feedback-message');
 let currentUser = null;
 
 // Toggle to Sign-Up form
@@ -90,6 +70,7 @@ function showSignup() {
     loginTab.classList.remove('active-tab');
     authSection.classList.add('active');
     loginSection.classList.add('hidden');
+    feedbackMessage.classList.add('hidden'); // Hide feedback message
 }
 
 // Toggle to Login form
@@ -98,28 +79,60 @@ function showLogin() {
     signupTab.classList.remove('active-tab');
     loginSection.classList.remove('hidden');
     authSection.classList.remove('active');
+    feedbackMessage.classList.add('hidden'); // Hide feedback message
 }
 
+// Sign-Up form submission
+document.getElementById('signup-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const username = document.getElementById('signup-username').value;
+    const password = document.getElementById('signup-password').value;
+    const wallet = document.getElementById('signup-wallet').value;
+
+    try {
+        const response = await fetchBackend('signup', 'POST', { username, password, wallet });
+
+        if (response.success) {
+            feedbackMessage.textContent = 'Sign-Up Successful!';
+            feedbackMessage.classList.remove('hidden');
+            feedbackMessage.classList.add('success');
+            showLogin(); // Switch to Login tab
+        } else {
+            feedbackMessage.textContent = `Error: ${response.error || 'Unknown error'}`;
+            feedbackMessage.classList.remove('hidden');
+            feedbackMessage.classList.add('error');
+        }
+    } catch (error) {
+        feedbackMessage.textContent = 'Network Error. Please try again.';
+        feedbackMessage.classList.remove('hidden');
+        feedbackMessage.classList.add('error');
+        console.error(error);
+    }
+});
+
 // Login form submission
-document.getElementById('login-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
+document.getElementById('login-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
 
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
 
     try {
         const response = await fetchBackend('login', 'POST', { username, password });
-        console.log('Server Response:', response);
 
         if (response.success) {
-            alert('Login successful!');
             currentUser = response.user;
             transitionToGame();
         } else {
-            alert(response.message || 'Invalid username or password');
+            feedbackMessage.textContent = response.message || 'Invalid username or password';
+            feedbackMessage.classList.remove('hidden');
+            feedbackMessage.classList.add('error');
         }
     } catch (error) {
-        alert('Error: Unable to connect to the server.');
+        feedbackMessage.textContent = 'Error: Unable to connect to the server.';
+        feedbackMessage.classList.remove('hidden');
+        feedbackMessage.classList.add('error');
         console.error('Login Error:', error);
     }
 });
