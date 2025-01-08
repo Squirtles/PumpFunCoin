@@ -1,3 +1,5 @@
+const fetch = require("node-fetch");
+
 exports.handler = async (event) => {
     try {
         if (event.httpMethod !== "POST") {
@@ -24,82 +26,65 @@ exports.handler = async (event) => {
         const token = process.env.GITHUB_TOKEN;
 
         // Step 1: Fetch the data.json file
-        let fileData;
-        try {
-            const fileResponse = await fetch(
-                `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
-                {
-                    headers: { Authorization: `token ${token}` },
-                }
-            );
-
-            if (!fileResponse.ok) {
-                throw new Error(`Failed to fetch data.json: ${fileResponse.status}`);
+        const fileResponse = await fetch(
+            `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}?ref=${branch}`,
+            {
+                headers: { Authorization: `token ${token}` },
             }
+        );
 
-            fileData = await fileResponse.json();
-        } catch (err) {
-            console.error("Error fetching file:", err);
+        if (!fileResponse.ok) {
+            console.error("Error fetching file:", await fileResponse.text());
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: "Server error while fetching data.json" }),
+                body: JSON.stringify({ error: "Failed to fetch data.json" }),
             };
         }
 
-        // Step 2: Decode and modify JSON content
-        let jsonContent;
-        try {
-            const decodedContent = Buffer.from(fileData.content, "base64").toString();
-            jsonContent = JSON.parse(decodedContent);
+        const fileData = await fileResponse.json();
+        const decodedContent = Buffer.from(fileData.content, "base64").toString();
+        const jsonContent = JSON.parse(decodedContent);
 
-            if (jsonContent.users[username]) {
-                return {
-                    statusCode: 400,
-                    body: JSON.stringify({ error: "Username already exists" }),
-                };
-            }
-
-            jsonContent.users[username] = { username, password, wallet, coins: 0 };
-        } catch (err) {
-            console.error("Error processing JSON content:", err);
+        // Step 2: Modify the JSON data
+        if (jsonContent.users[username]) {
             return {
-                statusCode: 500,
-                body: JSON.stringify({ error: "Server error while processing user data" }),
+                statusCode: 400,
+                body: JSON.stringify({ error: "Username already exists" }),
             };
         }
+
+        jsonContent.users[username] = { username, password, wallet, coins: 0 };
 
         // Step 3: Update the file on GitHub
-        try {
-            const updatedContent = Buffer.from(JSON.stringify(jsonContent, null, 2)).toString("base64");
-            const updateResponse = await fetch(
-                `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        Authorization: `token ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        message: `Add new user: ${username}`,
-                        content: updatedContent,
-                        sha: fileData.sha,
-                        branch,
-                    }),
-                }
-            );
+        const updatedContent = Buffer.from(
+            JSON.stringify(jsonContent, null, 2)
+        ).toString("base64");
 
-            if (!updateResponse.ok) {
-                throw new Error(`Failed to update data.json: ${updateResponse.status}`);
+        const updateResponse = await fetch(
+            `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`,
+            {
+                method: "PUT",
+                headers: {
+                    Authorization: `token ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    message: `Add new user: ${username}`,
+                    content: updatedContent,
+                    sha: fileData.sha, // Required for updating the file
+                    branch,
+                }),
             }
-        } catch (err) {
-            console.error("Error updating file:", err);
+        );
+
+        if (!updateResponse.ok) {
+            console.error("Error updating file:", await updateResponse.text());
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: "Server error while updating data.json" }),
+                body: JSON.stringify({ error: "Failed to update data.json" }),
             };
         }
 
-        // Return success response
         return {
             statusCode: 200,
             body: JSON.stringify({ success: true, user: jsonContent.users[username] }),
