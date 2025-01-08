@@ -3,6 +3,7 @@ const express = require('express');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const fs = require('fs');
 const app = express();
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Securely stored
@@ -60,6 +61,43 @@ const writeDataToGitHub = async (newData, sha) => {
     return response.json();
 };
 
+// Initialize data file if it does not exist
+const initializeDataFile = async () => {
+    try {
+        const { data } = await fetchDataFromGitHub();
+        if (!data) {
+            throw new Error("Data file is empty or not found.");
+        }
+    } catch (error) {
+        console.log("Initializing data.json...");
+        const initialData = {
+            users: {},
+            chat: [],
+            popupMessage: "Welcome to Pumpfun Coin!",
+        };
+        const encodedContent = Buffer.from(JSON.stringify(initialData, null, 2)).toString('base64');
+
+        await fetch(
+            `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`,
+            {
+                method: 'PUT',
+                headers: {
+                    Authorization: `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: 'Initialize data.json',
+                    content: encodedContent,
+                    branch: BRANCH,
+                }),
+            }
+        );
+        console.log("Data file initialized successfully.");
+    }
+};
+
+// Endpoints
+
 // Signup endpoint
 app.post('/signup', async (req, res) => {
     const { username, password, wallet } = req.body;
@@ -78,6 +116,28 @@ app.post('/signup', async (req, res) => {
         await writeDataToGitHub(data, sha);
 
         res.json({ success: true, user: data.users[username] });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again later.' });
+    }
+});
+
+// Login endpoint
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Missing required fields.' });
+    }
+
+    try {
+        const { data } = await fetchDataFromGitHub();
+        const user = data.users[username];
+
+        if (!user || user.password !== password) {
+            return res.status(401).json({ success: false, message: 'Invalid username or password.' });
+        }
+
+        res.json({ success: true, user });
     } catch (error) {
         res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again later.' });
     }
@@ -137,7 +197,7 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-// Pop-up message endpoint
+// Pop-up message endpoints
 app.get('/popup', async (req, res) => {
     try {
         const { data } = await fetchDataFromGitHub();
@@ -148,7 +208,6 @@ app.get('/popup', async (req, res) => {
     }
 });
 
-// Endpoint to update pop-up message (admin functionality)
 app.post('/popup', async (req, res) => {
     try {
         const { message } = req.body;
@@ -163,14 +222,7 @@ app.post('/popup', async (req, res) => {
     }
 });
 
-// Other endpoints (chat, popup) remain similar...
-// Start server
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
-
-
-
-// Initialize data file if not exists
-if (!fs.existsSync(DATA_FILE)) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ users: {}, chat: [], popupMessage: "Welcome to Pumpfun Coin!" }, null, 2));
-}
-
+// Start the server
+initializeDataFile().then(() => {
+    app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+});
