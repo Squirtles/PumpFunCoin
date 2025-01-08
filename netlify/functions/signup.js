@@ -1,6 +1,6 @@
-const fetch = require("node-fetch");
+import fetch from "node-fetch";
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
     try {
         if (event.httpMethod !== "POST") {
             return {
