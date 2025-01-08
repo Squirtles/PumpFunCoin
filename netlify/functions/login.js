@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 
 exports.handler = async (event) => {
     if (event.httpMethod !== "POST") {
+        console.warn("Invalid HTTP Method:", event.httpMethod);
         return {
             statusCode: 405,
             body: JSON.stringify({ error: "Method Not Allowed" }),
@@ -14,51 +15,52 @@ exports.handler = async (event) => {
     try {
         const { username, password } = JSON.parse(event.body);
 
-        // Validate required fields
         if (!username || !password) {
+            console.warn("Missing username or password");
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: "Username and password are required" }),
             };
         }
 
-        // Fetch user by username
         const { data: user, error: fetchError } = await supabase
             .from('users')
             .select('*')
             .eq('username', username)
             .single();
 
-        console.log("Fetched User:", user);
-        console.log("Fetch Error:", fetchError);
-
         if (fetchError || !user) {
+            console.warn("User not found or database error:", fetchError);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: "Invalid username or password" }),
             };
         }
 
-        // Compare provided password with stored hashed password
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        console.log("Password Valid:", isPasswordValid);
-
         if (!isPasswordValid) {
+            console.warn("Invalid password for user:", username);
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: "Invalid username or password" }),
             };
         }
 
-        // Success: Remove sensitive data before sending user object
         delete user.password;
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ success: true, user }),
+            body: JSON.stringify({
+                success: true,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    created_at: user.created_at,
+                },
+            }),
         };
     } catch (error) {
-        console.error("Login Error:", error);
+        console.error("Unexpected error:", error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "An unexpected error occurred." }),
